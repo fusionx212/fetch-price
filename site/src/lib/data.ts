@@ -17,13 +17,13 @@ export interface VendorPage {
 
 // ── live helpers ──────────────────────────────────────────────────────────
 async function liveVendors(): Promise<Vendor[]> {
-  const { data } = await supabase!.from('vendors').select('*').eq('status', 'active').order('name');
+  const { data } = await supabase!.from('fp_vendors').select('*').eq('status', 'active').order('name');
   return (data as Vendor[]) ?? [];
 }
 
 async function liveSnapshots(vendorId: string): Promise<Snapshot[]> {
   const { data } = await supabase!
-    .from('snapshots')
+    .from('fp_snapshots')
     .select('captured_at, extracted')
     .eq('vendor_id', vendorId)
     .order('captured_at', { ascending: true })
@@ -33,8 +33,8 @@ async function liveSnapshots(vendorId: string): Promise<Snapshot[]> {
 
 async function liveEvents(limit = 200): Promise<ChangeEvent[]> {
   const { data } = await supabase!
-    .from('change_events')
-    .select('*, vendor:vendors(*)')
+    .from('fp_change_events')
+    .select('*, vendor:fp_vendors(*)')
     .order('detected_at', { ascending: false })
     .limit(limit);
   return (data as ChangeEvent[]) ?? [];
@@ -59,12 +59,12 @@ export async function getVendors(): Promise<Vendor[]> {
 
 export async function getVendorPage(slug: string): Promise<VendorPage | null> {
   if (isLive) {
-    const { data: v } = await supabase!.from('vendors').select('*').eq('slug', slug).maybeSingle();
+    const { data: v } = await supabase!.from('fp_vendors').select('*').eq('slug', slug).maybeSingle();
     if (!v) return null;
     const snaps = await liveSnapshots(v.id);
     const latest = snaps[snaps.length - 1];
     const { data: evs } = await supabase!
-      .from('change_events').select('*').eq('vendor_id', v.id).order('detected_at', { ascending: false });
+      .from('fp_change_events').select('*').eq('vendor_id', v.id).order('detected_at', { ascending: false });
     return {
       vendor: v as Vendor,
       plans: latest?.extracted?.plans ?? [],

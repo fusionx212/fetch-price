@@ -59,5 +59,5 @@ node src/index.js                 # full run
 
 ## Telegram ops (wire into Clawbot router)
 /fpstatus · /fpqueue · /fpapprove <event_id> · /fpskip <event_id> · /fpretry <slug>
-Handlers should hit Supabase directly (`change_events.newsjack_status`,
-`vendors.status`). Send-side already implemented in `src/ops/telegram.js`.
+Handlers should hit Supabase directly (`fp_change_events.newsjack_status`,
+`fp_vendors.status`). Send-side already implemented in `src/ops/telegram.js`.

@@ -34,11 +34,11 @@ async function processVendor(vendor) {
       // Draft newsjack for the biggest change if it clears the bar
       const top = changes.reduce((a, b) => (a.significance >= b.significance ? a : b));
       if (top.significance >= NEWSJACK_THRESHOLD) {
-        const { data: ev } = await db.from('change_events')
+        const { data: ev } = await db.from('fp_change_events')
           .select('id').eq('vendor_id', vendor.id)
           .order('detected_at', { ascending: false }).limit(1).single();
         const { result: draft } = await aiText(newsjackDraft(vendor.name, top));
-        await db.from('change_events').update({ newsjack_status: 'drafted' }).eq('id', ev.id);
+        await db.from('fp_change_events').update({ newsjack_status: 'drafted' }).eq('id', ev.id);
         await notifyDraft(vendor, ev.id, draft);
       }
     }

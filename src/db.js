@@ -7,7 +7,7 @@ export const db = createClient(
 
 export async function dueVendors(limit = 200) {
   const { data, error } = await db
-    .from('vendors')
+    .from('fp_vendors')
     .select('*')
     .eq('status', 'active')
     .lte('next_check_at', new Date().toISOString())
@@ -18,7 +18,7 @@ export async function dueVendors(limit = 200) {
 
 export async function lastSnapshot(vendorId) {
   const { data } = await db
-    .from('snapshots')
+    .from('fp_snapshots')
     .select('raw_hash, extracted')
     .eq('vendor_id', vendorId)
     .order('captured_at', { ascending: false })
@@ -28,7 +28,7 @@ export async function lastSnapshot(vendorId) {
 }
 
 export async function saveSnapshot(vendorId, hash, extracted, tier) {
-  const { error } = await db.from('snapshots').insert({
+  const { error } = await db.from('fp_snapshots').insert({
     vendor_id: vendorId, raw_hash: hash, extracted, tier_used: tier
   });
   if (error) throw error;
@@ -45,7 +45,7 @@ export async function saveEvents(vendorId, changes) {
     significance: c.significance,
     summary: c.summary
   }));
-  const { error } = await db.from('change_events').insert(rows);
+  const { error } = await db.from('fp_change_events').insert(rows);
   if (error) throw error;
 }
 
@@ -56,6 +56,6 @@ export async function bumpVendor(vendor, { ok, selectors }) {
   };
   if (selectors) patch.selectors = selectors;               // self-heal writeback
   if (!ok && patch.consecutive_failures >= 2) patch.status = 'flagged';
-  await db.from('vendors').update(patch).eq('id', vendor.id);
+  await db.from('fp_vendors').update(patch).eq('id', vendor.id);
   return patch.status === 'flagged';
 }
