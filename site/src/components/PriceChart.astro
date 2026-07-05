@@ -1,0 +1,61 @@
+---
+// 12-month price history line chart, inline SVG (no client JS). Tabular mono axis labels.
+// Draws one line per plan. This is the SEO unit's evidence — substantive from data alone.
+import type { PricePoint } from '../lib/types';
+import { money, monthLabel } from '../lib/format';
+
+interface Props { series: { name: string; points: PricePoint[] }[]; currency?: string; }
+const { series, currency = 'GBP' } = Astro.props;
+
+const W = 760, H = 300, padL = 56, padR = 16, padT = 18, padB = 34;
+const all = series.flatMap((s) => s.points.map((p) => p.price)).filter((x): x is number => typeof x === 'number');
+const dates = series[0]?.points.map((p) => p.date) ?? [];
+const min = all.length ? Math.min(...all) : 0;
+const max = all.length ? Math.max(...all) : 1;
+// pad the domain 8% so lines don't hug the frame
+const lo = min - (max - min || min || 1) * 0.12;
+const hi = max + (max - min || min || 1) * 0.12;
+const n = Math.max(dates.length - 1, 1);
+const x = (i: number) => padL + (i / n) * (W - padL - padR);
+const y = (v: number) => padT + (1 - (v - lo) / (hi - lo || 1)) * (H - padT - padB);
+const COLORS = ['var(--color-accent)', '#33556e', '#1a7a3d', '#7a3906', '#3f3f46'];
+const gridVals = [lo, lo + (hi - lo) / 2, hi].map((v) => Math.round(v));
+---
+<figure class="chart card">
+  <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Price history chart">
+    {gridVals.map((v) => (
+      <g>
+        <line x1={padL} x2={W - padR} y1={y(v)} y2={y(v)} stroke="var(--color-hairline)" />
+        <text x={padL - 10} y={y(v) + 4} text-anchor="end" class="axis">{money(v, currency)}</text>
+      </g>
+    ))}
+    {dates.map((dte, i) => (
+      (i % 2 === 0) && <text x={x(i)} y={H - 12} text-anchor="middle" class="axis">{monthLabel(dte)}</text>
+    ))}
+    {series.map((s, si) => {
+      const pts = s.points.map((p, i) => (typeof p.price === 'number' ? `${x(i)},${y(p.price)}` : null)).filter(Boolean);
+      const dPath = pts.map((c, i) => `${i ? 'L' : 'M'}${c}`).join(' ');
+      const color = COLORS[si % COLORS.length];
+      return (
+        <g>
+          <path d={dPath} fill="none" stroke={color} stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" />
+          {s.points.map((p, i) => (typeof p.price === 'number' && (i === s.points.length - 1) && (
+            <circle cx={x(i)} cy={y(p.price)} r="3.5" fill={color} />
+          )))}
+        </g>
+      );
+    })}
+  </svg>
+  <figcaption class="chart-legend">
+    {series.map((s, si) => (
+      <span class="leg"><span class="leg-swatch" style={`background:${COLORS[si % COLORS.length]}`}></span>{s.name}</span>
+    ))}
+  </figcaption>
+</figure>
+<style>
+  .chart{padding:18px 20px 14px}
+  .axis{font-family:var(--font-mono); font-size:11px; fill:var(--color-ink-3)}
+  .chart-legend{display:flex; flex-wrap:wrap; gap:16px; padding-top:12px; border-top:1px solid var(--color-hairline); margin-top:6px}
+  .leg{display:inline-flex; align-items:center; gap:7px; font-size:.85rem; color:var(--color-ink-2); font-weight:500}
+  .leg-swatch{width:12px; height:3px; border-radius:2px}
+</style>

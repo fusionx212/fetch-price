@@ -1,0 +1,21 @@
+{
+  "name": "fetch-price-site",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "fetch-price.com public site — the price watchdog for business software",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "shots": "node tools/screenshot.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.2.1",
+    "@supabase/supabase-js": "^2.45.0",
+    "astro": "^4.16.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}

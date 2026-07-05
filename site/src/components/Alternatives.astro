@@ -1,0 +1,41 @@
+---
+// Alternatives block. Integrity rule (DESIGN-SPEC / spec §9): affiliate availability
+// NEVER determines which alternatives appear or their order beyond tie-breaks. Same-category
+// vendors are shown; an approved affiliate link only changes the outbound href, not inclusion.
+import type { Vendor } from '../lib/types';
+interface Props { current: Vendor; all: Vendor[]; }
+const { current, all } = Astro.props;
+const alts = all
+  .filter((v) => v.category === current.category && v.slug !== current.slug)
+  .slice(0, 3);
+const outbound = (v: Vendor) =>
+  v.affiliate_status === 'approved' && v.affiliate_url ? v.affiliate_url : `/pricing-history/${v.slug}/`;
+const isAff = (v: Vendor) => v.affiliate_status === 'approved' && !!v.affiliate_url;
+---
+{alts.length > 0 && (
+  <section class="alts">
+    <h2 class="headline-md">Alternatives to {current.name}</h2>
+    <p class="alts-sub label">Same category · listed independently of any commercial arrangement</p>
+    <div class="alts-grid">
+      {alts.map((v) => (
+        <a href={outbound(v)} class="alt card" rel={isAff(v) ? 'sponsored nofollow' : ''}>
+          <span class="alt-name">{v.name}</span>
+          <span class="label alt-cat">{v.category}</span>
+          <span class="alt-cta">{isAff(v) ? 'Visit site →' : 'Price history →'}</span>
+        </a>
+      ))}
+    </div>
+    <p class="alts-disc">Some outbound links may earn us a commission. It never affects which tools we list or how we rank them.</p>
+  </section>
+)}
+<style>
+  .alts{margin-top:16px}
+  .alts-sub{margin-top:6px}
+  .alts-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-top:16px}
+  .alt{display:flex; flex-direction:column; gap:6px; padding:18px}
+  .alt:hover{box-shadow:var(--shadow-2)}
+  .alt-name{font-weight:600; color:var(--color-ink); font-size:1.05rem}
+  .alt-cat{color:var(--color-ink-3)}
+  .alt-cta{color:var(--color-accent); font-weight:600; font-size:.9rem; margin-top:4px}
+  .alts-disc{margin-top:14px; color:var(--color-ink-3); font-size:.8rem}
+</style>

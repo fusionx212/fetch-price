@@ -1,0 +1,29 @@
+---
+// Inline single-field pill (input + button fused). Never a modal, never on entry.
+// Copy names the vendor. Posts to the Sprint-3 watchlist endpoint; until that exists
+// it degrades to a mailto so the capture still works.
+interface Props { vendorName?: string; slug?: string; }
+const { vendorName, slug } = Astro.props;
+const label = vendorName
+  ? `Email me when ${vendorName} changes price or packaging`
+  : 'Email me when anything in my stack changes price';
+---
+<form class="alert" id="watch" action="/api/watch" method="post" data-slug={slug ?? ''}>
+  <label class="alert-label" for="alert-email">{label}</label>
+  <div class="alert-pill">
+    <input id="alert-email" name="email" type="email" required placeholder="you@company.co.uk" autocomplete="email" />
+    <input type="hidden" name="vendor" value={slug ?? ''} />
+    <button type="submit" class="btn btn-primary">Watch it</button>
+  </div>
+  <p class="alert-note">Free. One email when it changes — not a newsletter. Unsubscribe in one click.</p>
+</form>
+<style>
+  .alert{background:var(--color-surface); border:1px solid var(--color-hairline); border-radius:14px; padding:24px; box-shadow:var(--shadow-1)}
+  .alert-label{display:block; font-family:var(--font-display); font-weight:600; font-size:1.25rem; color:var(--color-ink); margin-bottom:14px; letter-spacing:-.01em}
+  .alert-pill{display:flex; gap:8px; max-width:520px}
+  .alert-pill input[type=email]{flex:1; min-width:0; height:48px; padding:0 16px; border:1px solid var(--color-hairline); border-radius:6px; background:var(--color-surface-high); font-family:var(--font-sans); font-size:1rem; color:var(--color-ink)}
+  .alert-pill input[type=email]:focus{outline:none; border-color:var(--color-accent)}
+  .alert-pill .btn{height:48px}
+  .alert-note{margin-top:12px; color:var(--color-ink-3); font-size:.85rem}
+  @media (max-width:520px){ .alert-pill{flex-direction:column} .alert-pill .btn{width:100%; justify-content:center} }
+</style>

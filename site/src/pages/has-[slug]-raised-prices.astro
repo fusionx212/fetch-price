@@ -1,0 +1,98 @@
+---
+// Question-format SEO page targeting the exact query "has {vendor} raised prices".
+import Base from '../layouts/Base.astro';
+import PriceChart from '../components/PriceChart.astro';
+import AlertCapture from '../components/AlertCapture.astro';
+import { getVendors, getVendorPage } from '../lib/data';
+import { fullDate, CHANGE_LABEL } from '../lib/format';
+import { raisedPricesFAQ, breadcrumb } from '../lib/schema';
+
+export async function getStaticPaths() {
+  const vendors = await getVendors();
+  return vendors.map((v) => ({ params: { slug: v.slug } }));
+}
+
+const { slug } = Astro.params;
+const page = await getVendorPage(slug!);
+if (!page) return Astro.redirect('/pricing-history/');
+const { vendor, plans, history, events } = page;
+const site = Astro.site?.toString().replace(/\/$/, '') || 'https://fetch-price.com';
+
+const rises = events.filter((e) => e.change_type === 'price_up');
+const answered = rises.length > 0;
+const latest = rises[0];
+const series = plans.map((p) => ({ name: p.name, points: history[p.name] ?? [] }));
+
+const jsonLd = [
+  raisedPricesFAQ(vendor, events),
+  breadcrumb([
+    { name: 'Price histories', url: `${site}/pricing-history/` },
+    { name: `Has ${vendor.name} raised prices?`, url: `${site}/has-${vendor.slug}-raised-prices/` },
+  ]),
+];
+---
+<Base
+  title={`Has ${vendor.name} raised its prices? — Fetch-Price`}
+  description={answered
+    ? `Yes — ${rises.length} recorded price rise${rises.length === 1 ? '' : 's'} for ${vendor.name}. The latest: ${latest.summary}`
+    : `We have no recorded list-price rise for ${vendor.name} to date. See the full dated history.`}
+  path={`has-${vendor.slug}-raised-prices/`}
+  jsonLd={jsonLd}
+>
+  <article class="wrap qpage">
+    <nav class="crumb label"><a href={`/pricing-history/${vendor.slug}/`}>{vendor.name} history</a></nav>
+    <h1 class="display-xl q-title">Has {vendor.name} raised its prices?</h1>
+
+    <div class={`answer ${answered ? 'answer-yes' : 'answer-no'}`}>
+      <span class="answer-verdict">{answered ? 'Yes.' : 'Not so far.'}</span>
+      <p class="body-lg answer-body">
+        {answered
+          ? `We have recorded ${rises.length} price rise${rises.length === 1 ? '' : 's'} for ${vendor.name}. The most recent was on ${fullDate(latest.detected_at)}.`
+          : `We have no recorded list-price rise for ${vendor.name} in the period we have tracked. We check regularly and will log the first move the moment it happens.`}
+      </p>
+    </div>
+
+    {answered && (
+      <section class="q-detail">
+        <h2 class="headline-md">The changes, dated</h2>
+        <ol class="q-log">
+          {rises.map((e) => (
+            <li class="q-logitem">
+              <span class="data q-date">{fullDate(e.detected_at)}</span>
+              <span class="chip chip-rise">{CHANGE_LABEL[e.change_type]}</span>
+              <p class="q-summary">{e.summary}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+    )}
+
+    <section class="q-chart">
+      <h2 class="headline-md">{vendor.name} price history</h2>
+      <PriceChart series={series} currency={vendor.currency} />
+    </section>
+
+    <section class="q-alert">
+      <AlertCapture vendorName={vendor.name} slug={vendor.slug} />
+    </section>
+  </article>
+</Base>
+
+<style>
+  .qpage{padding-block:40px 24px; max-width:900px}
+  .crumb{margin-bottom:18px}
+  .crumb a{color:var(--color-ink-3)}
+  .q-title{margin-bottom:28px}
+  .answer{padding:28px; border-radius:14px; box-shadow:var(--shadow-1); margin-bottom:44px; border:1px solid var(--color-hairline)}
+  .answer-yes{background:var(--color-rise-container)}
+  .answer-no{background:var(--color-drop-container)}
+  .answer-verdict{font-family:var(--font-display); font-weight:600; font-size:2.5rem; color:var(--color-ink); display:block; line-height:1}
+  .answer-body{margin-top:12px; color:var(--color-ink-2)}
+  section{margin-bottom:44px}
+  .q-detail h2, .q-chart h2{margin-bottom:16px}
+  .q-log{list-style:none; margin:0; padding:0}
+  .q-logitem{display:grid; grid-template-columns:130px 120px 1fr; gap:16px; align-items:baseline; padding:16px 0; border-top:1px solid var(--color-hairline)}
+  .q-date{color:var(--color-ink-3); font-size:.85rem}
+  .q-summary{color:var(--color-ink-2); line-height:1.55}
+  @media (max-width:640px){ .q-logitem{grid-template-columns:1fr; gap:6px} }
+</style>

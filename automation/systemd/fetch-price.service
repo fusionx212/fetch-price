@@ -1,0 +1,17 @@
+# /etc/systemd/system/fetch-price.service
+[Unit]
+Description=Fetch-Price nightly scrape run
+After=network-online.target ollama.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=dalec
+WorkingDirectory=/home/dalec/websites/fetch-price
+ExecStart=/usr/bin/node src/index.js
+EnvironmentFile=/home/dalec/websites/fetch-price/.env
+TimeoutStartSec=3h
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

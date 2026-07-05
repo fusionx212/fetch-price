@@ -1,0 +1,34 @@
+---
+// Signature move 1: the Wire. Real change_events ticking in mono. No data → caller
+// doesn't render it (never faked). Duplicated once for a seamless marquee loop.
+import type { ChangeEvent } from '../lib/types';
+import { deltaChip } from '../lib/format';
+interface Props { events: ChangeEvent[]; }
+const { events } = Astro.props;
+const items = events.filter((e) => e.change_type === 'price_up' || e.change_type === 'price_down' || e.change_type === 'shrinkflation');
+const loop = [...items, ...items];
+---
+{items.length > 0 && (
+  <div class="wire" aria-label="Recent pricing changes ticker">
+    <div class="wire-track">
+      {loop.map((e) => {
+        const d = deltaChip(e.old_value?.price, e.new_value?.price);
+        const arrow = e.change_type === 'price_down' ? '▾' : '▴';
+        const cls = e.change_type === 'price_down' ? 'w-drop' : 'w-rise';
+        return (
+          <a href={`/pricing-history/${e.vendor?.slug}/`} class="wire-item">
+            <b>{e.vendor?.name}{e.plan_name ? ` ${e.plan_name}` : ''}</b>
+            {d && <span class={cls}>{d.dir === 'rise' ? '+' : '−'}{d.text.replace(/[▲▼]\s*/, '')}</span>}
+            {typeof e.new_value?.price === 'number' && <span class={cls}>£{e.new_value.price.toFixed(2)} {arrow}</span>}
+            {e.change_type === 'shrinkflation' && <span class="w-rise">packaging {arrow}</span>}
+          </a>
+        );
+      })}
+    </div>
+  </div>
+)}
+<style>
+  .wire-item{color:var(--color-ink-2)}
+  .w-rise{color:var(--color-rise)}
+  .w-drop{color:var(--color-drop)}
+</style>

@@ -1,0 +1,5 @@
+# Alternative to systemd — crontab -e on the Hermes box
+# Nightly scrape 02:30
+30 2 * * * cd /home/dalec/websites/fetch-price && /usr/bin/node src/index.js >> logs/run.log 2>&1
+# Sunday weekly digest 08:00 (implement src/alerts/digest.js in sprint 3)
+0 8 * * 0 cd /home/dalec/websites/fetch-price && /usr/bin/node src/alerts/digest.js >> logs/digest.log 2>&1

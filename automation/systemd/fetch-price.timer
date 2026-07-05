@@ -1,0 +1,12 @@
+# /etc/systemd/system/fetch-price.timer
+# Enable: sudo systemctl enable --now fetch-price.timer
+[Unit]
+Description=Run Fetch-Price scrape nightly at 02:30
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+RandomizedDelaySec=900
+Persistent=true
+
+[Install]
+WantedBy=timers.target

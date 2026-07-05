@@ -1,0 +1,18 @@
+{
+  "name": "fetch-price",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "fetch-price.com — the price watchdog for everything your business pays for",
+  "scripts": {
+    "run": "node src/index.js",
+    "run:one": "node src/index.js --vendor=",
+    "seed": "node seeds/seed.js",
+    "playwright:install": "playwright install chromium --with-deps"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "playwright": "^1.48.0"
+  }
+}

@@ -1,0 +1,58 @@
+---
+// Signature move 2: the hero IS the instrument. A real live vendor comparison card.
+import type { VendorPage } from '../lib/data';
+import { bestPrice } from '../lib/data';
+import { priceLabel, checkedAgo, deltaChip } from '../lib/format';
+import Sparkline from './Sparkline.astro';
+interface Props { page: VendorPage; }
+const { page } = Astro.props;
+const { vendor, plans, history, events } = page;
+const cheapest = bestPrice(plans);
+---
+<article class="instrument" style={`--category-accent:${vendor.category === 'broadband' ? '#33556e' : vendor.category === 'telecoms' ? '#3f3f46' : 'var(--color-accent)'}`}>
+  <header class="inst-head">
+    <div>
+      <div class="label eyebrow">Live · {vendor.category}</div>
+      <h3 class="headline-md">{vendor.name}</h3>
+    </div>
+    <span class="fresh"><span class="dot"></span>{checkedAgo(page.lastChecked)}</span>
+  </header>
+  <div class="inst-rows">
+    {plans.map((pl) => {
+      const pts = history[pl.name] ?? [];
+      const first = pts.map((p) => p.price).find((x) => typeof x === 'number');
+      const last = [...pts].reverse().map((p) => p.price).find((x) => typeof x === 'number');
+      const d = deltaChip(first, last);
+      const isBest = cheapest?.name === pl.name;
+      return (
+        <div class={`inst-row${isBest ? ' inst-best' : ''}`}>
+          <span class="inst-plan">{pl.name}</span>
+          <span class="inst-spark"><Sparkline points={pts} w={96} h={26} /></span>
+          {d ? <span class={`chip chip-${d.dir}`}>{d.text}</span> : <span class="chip chip-flat">—</span>}
+          <span class="data inst-price">{priceLabel(pl)}</span>
+        </div>
+      );
+    })}
+  </div>
+  <footer class="inst-foot">
+    <span class="label">12-month trend · list price</span>
+    <a href={`/pricing-history/${vendor.slug}/`} class="inst-link">Full history →</a>
+  </footer>
+</article>
+<style>
+  .instrument{background:var(--color-surface-high); border:1px solid var(--color-hairline); border-radius:14px; box-shadow:var(--shadow-3); padding:22px 22px 16px; border-top:3px solid var(--category-accent)}
+  .inst-head{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:16px}
+  .inst-rows{display:flex; flex-direction:column}
+  .inst-row{display:grid; grid-template-columns:1fr auto auto auto; align-items:center; gap:14px; padding:11px 10px; border-top:1px solid var(--color-hairline); border-radius:8px}
+  .inst-row:hover{background:var(--color-surface)}
+  .inst-best{background:var(--color-accent-container)}
+  .inst-best:hover{background:var(--color-accent-container)}
+  .inst-plan{font-weight:600; color:var(--color-ink); font-size:.95rem}
+  .inst-price{font-size:1.05rem; text-align:right; min-width:96px}
+  .inst-foot{display:flex; justify-content:space-between; align-items:center; padding-top:14px; margin-top:6px; border-top:1px solid var(--color-hairline)}
+  .inst-link{color:var(--color-accent); font-weight:600; font-size:.9rem}
+  @media (max-width:560px){
+    .inst-row{grid-template-columns:1fr auto auto; gap:10px}
+    .inst-spark{display:none}
+  }
+</style>

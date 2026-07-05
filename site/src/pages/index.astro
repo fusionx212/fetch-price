@@ -1,0 +1,167 @@
+---
+import Base from '../layouts/Base.astro';
+import HeroInstrument from '../components/HeroInstrument.astro';
+import VendorRow from '../components/VendorRow.astro';
+import AlertCapture from '../components/AlertCapture.astro';
+import { getVendors, getChangeEvents, getVendorPage, computeStats, bestPrice } from '../lib/data';
+import { CHANGE_LABEL, fullDate } from '../lib/format';
+
+const vendors = await getVendors();
+const events = await getChangeEvents(60);
+const stats = await computeStats();
+
+// hero = the vendor behind the biggest recent price move
+const topMove = events.find((e) => e.change_type === 'price_up') ?? events[0];
+const heroSlug = topMove?.vendor?.slug ?? vendors[0]?.slug;
+const heroPage = heroSlug ? await getVendorPage(heroSlug) : null;
+
+// "most-moved" list for section 02
+const movedSlugs = [...new Set(events.map((e) => e.vendor?.slug).filter(Boolean))].slice(0, 6) as string[];
+const movedPages = await Promise.all(movedSlugs.map((s) => getVendorPage(s)));
+
+const categories = [...new Set(vendors.map((v) => v.category))].map((cat) => ({
+  cat,
+  count: vendors.filter((v) => v.category === cat).length,
+  sample: vendors.filter((v) => v.category === cat).slice(0, 4).map((v) => v.name),
+}));
+---
+<Base
+  title="Fetch-Price — the price watchdog for business software"
+  description="Your software vendors raise prices quietly. Fetch-Price watches the pricing of every tool your business pays for and tells you the moment anything changes — with the full history."
+>
+  <!-- HERO: the instrument -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="label eyebrow">Independent pricing intelligence</p>
+        <h1 class="display-xl">Your software vendors raise prices quietly.</h1>
+        <p class="body-lg hero-sub">We watch the pricing of every tool your business pays for — and tell you the moment anything changes. With the dated history, so you walk into renewal knowing exactly what they charged 12 months ago.</p>
+        <div class="hero-actions">
+          <a href="#watch" class="btn btn-primary">Watch my stack</a>
+          <a href="/pricing-history/" class="btn btn-secondary">Browse price histories</a>
+        </div>
+        <p class="hero-proof mono">SaaS prices rose 13% last year — 4× inflation. 79% of businesses were hit with an increase at renewal. Most found out from the invoice.</p>
+      </div>
+      <div class="hero-inst">
+        {heroPage && <HeroInstrument page={heroPage} />}
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 / 02 / 03 editorial -->
+  <section class="section" id="how">
+    <div class="wrap">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <h2 class="headline-lg">Add your stack</h2>
+          <p class="body-lg">Pick the tools you pay for — or paste an invoice and we match the vendors. {stats.vendorCount} vendors tracked across {stats.categoryCount} categories today, and growing.</p>
+        </div>
+      </div>
+      <hr class="rule step-rule" />
+      <div class="step step-reverse">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <h2 class="headline-lg">We check every pricing page, every day</h2>
+          <p class="body-lg">The moment a plan moves, we record it. Here is what has moved recently:</p>
+          <div class="moved card">
+            {movedPages.filter(Boolean).map((page) => {
+              const pl = bestPrice(page!.plans);
+              return <VendorRow vendor={page!.vendor} plan={pl} points={pl ? page!.history[pl.name] : []} />;
+            })}
+          </div>
+        </div>
+      </div>
+      <hr class="rule step-rule" />
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <h2 class="headline-lg">You get the alert before renewal, not after</h2>
+          <p class="body-lg">The change, the full price history, and the alternatives — in one email. We flag packaging changes too: features moved to higher tiers, seat minimums, credit-rate changes. Not just the headline number.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- categories index -->
+  <section class="section section-alt">
+    <div class="wrap">
+      <p class="label eyebrow">What we watch</p>
+      <h2 class="headline-lg cat-head">Everything your business pays for</h2>
+      <div class="cat-grid">
+        {categories.map((c) => (
+          <a href={`/pricing-history/?category=${c.cat}`} class="cat-card" style={`--category-accent:${c.cat === 'broadband' ? '#33556e' : c.cat === 'telecoms' ? '#3f3f46' : 'var(--color-accent)'}`}>
+            <span class="cat-name headline-md">{c.cat}</span>
+            <span class="data cat-count">{c.count} tracked</span>
+            <span class="cat-sample">{c.sample.join(' · ')}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- honest method band -->
+  <section class="section">
+    <div class="wrap method">
+      <p class="label eyebrow">How we do it</p>
+      <h2 class="headline-lg">We read the pricing page so you don’t have to</h2>
+      <p class="body-lg">Every vendor’s published pricing, checked regularly and kept as a dated history. When a plan changes, we score how significant it is and record exactly what moved. Prices are shown as the vendor states them, inclusive of VAT where the vendor shows VAT. We are independent — we take no money from the vendors we track.</p>
+      <div class="method-stats">
+        <div><span class="data method-num">{stats.vendorCount}</span><span class="label">vendors watched</span></div>
+        <div><span class="data method-num">{stats.categoryCount}</span><span class="label">categories</span></div>
+        <div><span class="data method-num">{stats.changeCount}</span><span class="label">changes recorded</span></div>
+        <div><span class="data method-num">daily</span><span class="label">check cadence</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- final CTA -->
+  <section class="section section-alt cta-section">
+    <div class="wrap cta">
+      <h2 class="headline-lg">Walk into renewal with the receipts.</h2>
+      <p class="body-lg cta-sub">Watch your stack free. We’ll email you the moment a vendor moves — with the history that lets you push back.</p>
+      <div class="cta-capture"><AlertCapture /></div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero{padding-top:56px; padding-bottom:24px}
+  .hero-grid{display:grid; grid-template-columns:7fr 5fr; gap:40px; align-items:center}
+  .hero-copy .eyebrow{margin-bottom:16px}
+  .hero-sub{margin-top:20px; color:var(--color-ink-2)}
+  .hero-actions{display:flex; gap:12px; margin-top:28px; flex-wrap:wrap}
+  .hero-proof{margin-top:26px; padding-top:18px; border-top:1px solid var(--color-hairline); color:var(--color-ink-3); font-size:.82rem; line-height:1.6; max-width:52ch}
+  .hero-inst{position:relative; z-index:2; margin-left:-24px}
+
+  .step{display:grid; grid-template-columns:auto 1fr; gap:28px; align-items:start}
+  .step-reverse .step-body{order:0}
+  .step-num{font-family:var(--font-mono); font-size:2.5rem; font-weight:500; color:var(--color-accent); line-height:1}
+  .step-rule{margin-block:48px}
+  .step-body .body-lg{margin-top:12px; color:var(--color-ink-2)}
+  .moved{margin-top:22px; padding:8px 12px}
+
+  .cat-head{margin-top:8px; margin-bottom:32px}
+  .cat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px}
+  .cat-card{display:flex; flex-direction:column; gap:8px; padding:22px; background:var(--color-surface-high); border:1px solid var(--color-hairline); border-top:3px solid var(--category-accent); border-radius:10px; box-shadow:var(--shadow-1)}
+  .cat-card:hover{box-shadow:var(--shadow-2)}
+  .cat-name{text-transform:capitalize}
+  .cat-count{color:var(--color-accent); font-size:.95rem}
+  .cat-sample{color:var(--color-ink-3); font-size:.9rem; line-height:1.5}
+
+  .method{max-width:78ch}
+  .method .body-lg{margin-top:14px; color:var(--color-ink-2)}
+  .method-stats{display:flex; gap:44px; flex-wrap:wrap; margin-top:32px; padding-top:24px; border-top:1px solid var(--color-hairline)}
+  .method-stats div{display:flex; flex-direction:column; gap:4px}
+  .method-num{font-size:2rem; color:var(--color-ink)}
+
+  .cta{text-align:center; max-width:640px; margin-inline:auto}
+  .cta-sub{margin:14px auto 28px; color:var(--color-ink-2)}
+  .cta-capture{text-align:left}
+
+  @media (max-width:860px){
+    .hero-grid{grid-template-columns:1fr; gap:32px}
+    .hero-inst{margin-left:0}
+    .step{grid-template-columns:1fr; gap:12px}
+  }
+</style>

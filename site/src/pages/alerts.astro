@@ -1,0 +1,61 @@
+---
+// Public feed of recent detected changes — freshness signal + newsjacking source.
+import Base from '../layouts/Base.astro';
+import AlertCapture from '../components/AlertCapture.astro';
+import { getChangeEvents } from '../lib/data';
+import { fullDate, CHANGE_LABEL, deltaChip, money } from '../lib/format';
+
+const events = await getChangeEvents(80);
+---
+<Base
+  title="Recent software price changes — live feed | Fetch-Price"
+  description="Every pricing change we have detected across business-software and connectivity vendors, newest first. Price rises, cuts, and packaging changes — dated and evidenced."
+  path="alerts/"
+>
+  <section class="wrap feed">
+    <header class="feed-head">
+      <p class="label eyebrow">Recent changes</p>
+      <h1 class="display-xl">What moved, and when.</h1>
+      <p class="body-lg feed-sub">Every change we have detected, newest first. Rises in red, cuts in green, packaging changes flagged. Each links to the vendor’s full history.</p>
+    </header>
+
+    <ol class="feed-list">
+      {events.map((e) => {
+        const dir = e.change_type === 'price_down' ? 'drop' : (e.change_type === 'price_up' || e.change_type === 'shrinkflation') ? 'rise' : 'flat';
+        const d = deltaChip(e.old_value?.price, e.new_value?.price);
+        return (
+          <li class="feed-item">
+            <span class="data feed-date">{fullDate(e.detected_at)}</span>
+            <div class="feed-body">
+              <div class="feed-top">
+                <a href={`/pricing-history/${e.vendor?.slug}/`} class="feed-vendor">{e.vendor?.name}{e.plan_name ? ` · ${e.plan_name}` : ''}</a>
+                <span class={`chip chip-${dir}`}>{CHANGE_LABEL[e.change_type]}</span>
+                {d && <span class={`chip chip-${d.dir}`}>{d.text}</span>}
+              </div>
+              <p class="feed-summary">{e.summary}</p>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+
+    <section class="feed-cta">
+      <AlertCapture />
+    </section>
+  </section>
+</Base>
+
+<style>
+  .feed{padding-block:48px 24px; max-width:860px}
+  .feed-head{margin-bottom:44px}
+  .feed-head .display-xl{margin:14px 0}
+  .feed-sub{color:var(--color-ink-2)}
+  .feed-list{list-style:none; margin:0 0 48px; padding:0}
+  .feed-item{display:grid; grid-template-columns:130px 1fr; gap:20px; padding:22px 0; border-top:1px solid var(--color-hairline)}
+  .feed-date{color:var(--color-ink-3); font-size:.85rem; padding-top:2px}
+  .feed-top{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px}
+  .feed-vendor{font-weight:600; color:var(--color-ink); font-size:1.1rem}
+  .feed-vendor:hover{color:var(--color-accent)}
+  .feed-summary{color:var(--color-ink-2); line-height:1.55}
+  @media (max-width:640px){ .feed-item{grid-template-columns:1fr; gap:8px} }
+</style>

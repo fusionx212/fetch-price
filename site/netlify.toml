@@ -1,0 +1,22 @@
+# fetch-price.com — B2B public site (Astro static). The B2B build supersedes the
+# consumer "Price Wire" site on this domain (Dale's decision, 2026-07-05). The consumer
+# repo (CLAW /root/checkaprice) is retired/redirected separately, approval-gated.
+[build]
+  base = "site"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# History pages are the SEO unit — cache hard, rebuilt nightly on real changes.
+[[headers]]
+  for = "/pricing-history/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

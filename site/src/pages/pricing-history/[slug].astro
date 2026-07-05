@@ -1,0 +1,149 @@
+---
+import Base from '../../layouts/Base.astro';
+import PriceChart from '../../components/PriceChart.astro';
+import AlertCapture from '../../components/AlertCapture.astro';
+import Alternatives from '../../components/Alternatives.astro';
+import { getVendors, getVendorPage } from '../../lib/data';
+import { priceLabel, checkedAgo, fullDate, CHANGE_LABEL, deltaChip } from '../../lib/format';
+import { productSchema, breadcrumb } from '../../lib/schema';
+
+export async function getStaticPaths() {
+  const vendors = await getVendors();
+  return vendors.map((v) => ({ params: { slug: v.slug } }));
+}
+
+const { slug } = Astro.params;
+const page = await getVendorPage(slug!);
+if (!page) return Astro.redirect('/pricing-history/');
+const { vendor, plans, history, events } = page;
+const allVendors = await getVendors();
+const site = Astro.site?.toString().replace(/\/$/, '') || 'https://fetch-price.com';
+
+const series = plans.map((p) => ({ name: p.name, points: history[p.name] ?? [] }));
+const rises = events.filter((e) => e.change_type === 'price_up').length;
+const catAccent = vendor.category === 'broadband' ? '#33556e' : vendor.category === 'telecoms' ? '#3f3f46' : 'var(--color-accent)';
+
+const jsonLd = [
+  productSchema(vendor, plans, site),
+  breadcrumb([
+    { name: 'Price histories', url: `${site}/pricing-history/` },
+    { name: vendor.name, url: `${site}/pricing-history/${vendor.slug}/` },
+  ]),
+];
+---
+<Base
+  title={`${vendor.name} pricing history & price changes — Fetch-Price`}
+  description={`Dated price history for ${vendor.name}. ${rises ? `${rises} recorded price rise${rises === 1 ? '' : 's'}. ` : ''}Every plan, every change, checked regularly. Know what they charged before your renewal.`}
+  path={`pricing-history/${vendor.slug}/`}
+  jsonLd={jsonLd}
+>
+  <article class="wrap vpage">
+    <nav class="crumb label"><a href="/pricing-history/">Price histories</a> / {vendor.name}</nav>
+
+    <header class="vhead" style={`--category-accent:${catAccent}`}>
+      <div>
+        <p class="label eyebrow">{vendor.category} · pricing history</p>
+        <h1 class="headline-lg">{vendor.name}</h1>
+        <p class="fresh vhead-fresh"><span class="dot"></span>{checkedAgo(page.lastChecked)} · from {vendor.pricing_url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}</p>
+      </div>
+      <div class="vhead-verdict card">
+        <span class="label">Price rises recorded</span>
+        <span class="data verdict-num">{rises}</span>
+        <a href={`/has-${vendor.slug}-raised-prices/`} class="verdict-link">Has {vendor.name} raised prices? →</a>
+      </div>
+    </header>
+
+    <!-- current plans -->
+    <section class="plans">
+      <h2 class="headline-md">Current plans</h2>
+      <div class="plan-table card">
+        {plans.map((p, i) => {
+          const pts = history[p.name] ?? [];
+          const first = pts.map((x) => x.price).find((x) => typeof x === 'number');
+          const last = [...pts].reverse().map((x) => x.price).find((x) => typeof x === 'number');
+          const d = deltaChip(first, last);
+          return (
+            <div class="plan-row">
+              <span class="plan-name">{p.name}</span>
+              <span class="plan-unit label">{p.unit ?? 'flat'} · {p.period === 'year' ? 'yearly' : p.period === 'usage' ? 'usage' : 'monthly'}</span>
+              {d ? <span class={`chip chip-${d.dir}`}>{d.text} 12mo</span> : <span class="chip chip-flat">no change</span>}
+              <span class="data plan-price">{priceLabel(p)}</span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+    <!-- chart -->
+    <section class="chart-sec">
+      <h2 class="headline-md">12-month price history</h2>
+      <PriceChart series={series} currency={vendor.currency} />
+    </section>
+
+    <!-- change log -->
+    <section class="log-sec">
+      <h2 class="headline-md">Change log</h2>
+      {events.length ? (
+        <ol class="log">
+          {events.map((e) => {
+            const dir = e.change_type === 'price_down' ? 'drop' : e.change_type === 'price_up' || e.change_type === 'shrinkflation' ? 'rise' : 'flat';
+            return (
+              <li class="log-item">
+                <span class="data log-date">{fullDate(e.detected_at)}</span>
+                <span class={`chip chip-${dir} log-type`}>{CHANGE_LABEL[e.change_type]}</span>
+                <p class="log-summary">{e.summary}</p>
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
+        <p class="body-lg log-empty">No changes recorded yet. We baseline every plan on first check and log every move from then on.</p>
+      )}
+    </section>
+
+    <!-- alert -->
+    <section class="alert-sec">
+      <AlertCapture vendorName={vendor.name} slug={vendor.slug} />
+    </section>
+
+    <!-- alternatives -->
+    <section class="alt-sec">
+      <Alternatives current={vendor} all={allVendors} />
+    </section>
+  </article>
+</Base>
+
+<style>
+  .vpage{padding-block:40px 24px}
+  .crumb{margin-bottom:20px}
+  .crumb a{color:var(--color-ink-3)}
+  .crumb a:hover{color:var(--color-accent)}
+
+  .vhead{display:flex; justify-content:space-between; gap:28px; align-items:flex-start; flex-wrap:wrap; padding-bottom:32px; border-bottom:3px solid var(--category-accent); margin-bottom:40px}
+  .vhead h1{margin-top:6px}
+  .vhead-fresh{margin-top:12px}
+  .vhead-verdict{display:flex; flex-direction:column; gap:6px; padding:18px 22px; min-width:200px}
+  .verdict-num{font-size:2.75rem; color:var(--color-ink); line-height:1}
+  .verdict-link{color:var(--color-accent); font-weight:600; font-size:.88rem; margin-top:4px}
+
+  section{margin-bottom:44px}
+  .plans h2, .chart-sec h2, .log-sec h2{margin-bottom:16px}
+  .plan-table{padding:6px 16px}
+  .plan-row{display:grid; grid-template-columns:1fr auto auto auto; align-items:center; gap:16px; padding:14px 4px}
+  .plan-row + .plan-row{border-top:1px solid var(--color-hairline)}
+  .plan-name{font-weight:600; color:var(--color-ink); font-size:1.05rem}
+  .plan-unit{color:var(--color-ink-3)}
+  .plan-price{font-size:1.15rem; text-align:right; min-width:120px}
+
+  .log{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px}
+  .log-item{display:grid; grid-template-columns:130px 120px 1fr; gap:16px; align-items:baseline; padding:16px 4px; border-top:1px solid var(--color-hairline)}
+  .log-date{color:var(--color-ink-3); font-size:.85rem}
+  .log-type{justify-self:start}
+  .log-summary{color:var(--color-ink-2); line-height:1.55}
+
+  @media (max-width:640px){
+    .plan-row{grid-template-columns:1fr auto; row-gap:6px}
+    .plan-unit{grid-column:1/-1; order:3}
+    .log-item{grid-template-columns:1fr; gap:6px}
+  }
+</style>

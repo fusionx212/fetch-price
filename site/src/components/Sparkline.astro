@@ -1,0 +1,20 @@
+---
+import type { PricePoint } from '../lib/types';
+import { sparkPath } from '../lib/format';
+interface Props { points: PricePoint[]; w?: number; h?: number; }
+const { points, w = 120, h = 34 } = Astro.props;
+const sp = sparkPath(points, w, h);
+const stroke = sp?.last === 'rise' ? 'var(--color-rise)' : sp?.last === 'drop' ? 'var(--color-drop)' : 'var(--color-ink-3)';
+---
+{sp ? (
+  <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} class="spark" role="img" aria-label="12-month price trend" preserveAspectRatio="none">
+    <path d={sp.area} fill={stroke} fill-opacity="0.08" />
+    <path d={sp.line} fill="none" stroke={stroke} stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+  </svg>
+) : (
+  <span class="label spark-flat">flat</span>
+)}
+<style>
+  .spark{overflow:visible}
+  .spark-flat{color:var(--color-ink-3)}
+</style>

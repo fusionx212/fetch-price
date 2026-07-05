@@ -1,0 +1,95 @@
+---
+// Head-to-head: /compare/{a}-vs-{b}. Differentiator vs G2/Capterra = real price history.
+// Only within-category pairs are generated, capped, to keep the build bounded.
+import Base from '../../layouts/Base.astro';
+import PriceChart from '../../components/PriceChart.astro';
+import { getVendors, getVendorPage, bestPrice } from '../../lib/data';
+import { priceLabel, checkedAgo, deltaChip } from '../../lib/format';
+import { breadcrumb } from '../../lib/schema';
+
+export async function getStaticPaths() {
+  const vendors = await getVendors();
+  const paths: { params: { combo: string } }[] = [];
+  const byCat: Record<string, typeof vendors> = {};
+  for (const v of vendors) (byCat[v.category] ??= []).push(v);
+  for (const list of Object.values(byCat)) {
+    for (let i = 0; i < list.length; i++)
+      for (let j = i + 1; j < list.length; j++)
+        paths.push({ params: { combo: `${list[i].slug}-vs-${list[j].slug}` } });
+  }
+  return paths.slice(0, 200);
+}
+
+const { combo } = Astro.params;
+const [aSlug, bSlug] = combo!.split('-vs-');
+const [a, b] = await Promise.all([getVendorPage(aSlug), getVendorPage(bSlug)]);
+if (!a || !b) return Astro.redirect('/pricing-history/');
+const site = Astro.site?.toString().replace(/\/$/, '') || 'https://fetch-price.com';
+
+const cols = [a, b].map((page) => {
+  const cheapest = bestPrice(page.plans);
+  const pts = cheapest ? page.history[cheapest.name] ?? [] : [];
+  const first = pts.map((p) => p.price).find((x) => typeof x === 'number');
+  const last = [...pts].reverse().map((p) => p.price).find((x) => typeof x === 'number');
+  return { page, cheapest, d: deltaChip(first, last) };
+});
+const series = cols.map((c) => ({ name: `${c.page.vendor.name} ${c.cheapest?.name ?? ''}`.trim(), points: c.cheapest ? c.page.history[c.cheapest.name] ?? [] : [] }));
+
+const jsonLd = breadcrumb([
+  { name: 'Price histories', url: `${site}/pricing-history/` },
+  { name: `${a.vendor.name} vs ${b.vendor.name}`, url: `${site}/compare/${combo}/` },
+]);
+---
+<Base
+  title={`${a.vendor.name} vs ${b.vendor.name} — pricing & price history compared | Fetch-Price`}
+  description={`${a.vendor.name} vs ${b.vendor.name}: current plans, entry price, and 12-month price history side by side. The comparison G2 doesn’t show — how their prices have actually moved.`}
+  path={`compare/${combo}/`}
+  jsonLd={jsonLd}
+>
+  <article class="wrap cmp">
+    <p class="label eyebrow">Compared on price history</p>
+    <h1 class="headline-lg cmp-title">{a.vendor.name} <span class="cmp-vs">vs</span> {b.vendor.name}</h1>
+
+    <div class="cmp-cols">
+      {cols.map((c) => (
+        <div class="cmp-col card">
+          <h2 class="headline-md">{c.page.vendor.name}</h2>
+          <p class="fresh"><span class="dot"></span>{checkedAgo(c.page.lastChecked)}</p>
+          <div class="cmp-entry">
+            <span class="label">Entry plan</span>
+            <span class="cmp-plan">{c.cheapest?.name}</span>
+            <span class="data cmp-price">{c.cheapest ? priceLabel(c.cheapest) : 'POA'}</span>
+            {c.d && <span class={`chip chip-${c.d.dir}`}>{c.d.text} over 12mo</span>}
+          </div>
+          <ul class="cmp-plans">
+            {c.page.plans.map((p) => (
+              <li><span>{p.name}</span><span class="data">{priceLabel(p)}</span></li>
+            ))}
+          </ul>
+          <a href={`/pricing-history/${c.page.vendor.slug}/`} class="cmp-link">Full history →</a>
+        </div>
+      ))}
+    </div>
+
+    <section class="cmp-chart">
+      <h2 class="headline-md">Entry-plan price history, side by side</h2>
+      <PriceChart series={series} />
+    </section>
+  </article>
+</Base>
+
+<style>
+  .cmp{padding-block:44px 24px; max-width:960px}
+  .cmp-title{margin:8px 0 32px}
+  .cmp-vs{color:var(--color-ink-3); font-style:italic; font-size:.7em}
+  .cmp-cols{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:44px}
+  .cmp-col{padding:22px}
+  .cmp-col .fresh{margin-top:6px; margin-bottom:16px}
+  .cmp-entry{display:flex; flex-direction:column; gap:6px; padding:16px; background:var(--color-accent-container); border-radius:10px; margin-bottom:16px}
+  .cmp-plan{font-weight:600; color:var(--color-ink)}
+  .cmp-price{font-size:1.5rem}
+  .cmp-plans{list-style:none; margin:0 0 16px; padding:0}
+  .cmp-plans li{display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-top:1px solid var(--color-hairline)}
+  .cmp-link{color:var(--color-accent); font-weight:600; font-size:.9rem}
+  @media (max-width:680px){ .cmp-cols{grid-template-columns:1fr} }
+</style>
