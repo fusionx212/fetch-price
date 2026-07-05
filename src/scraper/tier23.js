@@ -16,8 +16,10 @@ export async function tier2(vendor) {
       userAgent: 'FetchPriceBot/1.0 (+https://fetch-price.com/bot)',
       viewport: { width: 1400, height: 2400 }
     });
-    await page.goto(vendor.pricing_url, { waitUntil: 'networkidle', timeout: 45000 });
-    await page.waitForTimeout(1500); // let pricing toggles settle
+    // domcontentloaded (not networkidle): many pricing pages keep long-poll/analytics
+    // connections open and never reach idle, so networkidle just times out (e.g. Xero).
+    await page.goto(vendor.pricing_url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await page.waitForTimeout(2500); // let pricing toggles / lazy content settle
     const html = await page.content();
     const text = await page.evaluate(() => document.body.innerText);
     const screenshot = (await page.screenshot({ fullPage: true, type: 'png' })).toString('base64');

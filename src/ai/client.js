@@ -1,112 +1,91 @@
-// AI routing: Hermes (Ollama) first, Claude API fallback — Clawbot hybrid pattern.
-// Local model handles text tasks for free; Claude handles vision + escalations.
+// AI routing via the estate LiteLLM gateway (:4000, OpenAI-compatible).
+// CHEAPEST-FIRST cascade per Dale: free local GPU models first, then cheap cloud
+// (Qwen3-235B-A22B-Thinking → DeepSeek flash). NEVER a paid Claude lane in the
+// auto-loop (MONEY RULE). Each task tries its cascade in order until one returns
+// output that passes the validator; only then does it stop.
 
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
-const CLAUDE_MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
-const AI_PRIMARY = process.env.AI_PRIMARY || 'ollama';
+const BASE = (process.env.LITELLM_BASE_URL || 'http://192.168.1.7:4000').replace(/\/$/, '');
+const KEY = process.env.LITELLM_API_KEY || process.env.LITELLM_MASTER_KEY || '';
 
-// Per-task local model routing — e.g. Qwen 235B for strict-JSON extraction,
-// DeepSeek for reasoning-heavy diffs and prose drafts. Falls back to OLLAMA_MODEL.
-const MODELS = {
-  extract: process.env.OLLAMA_MODEL_EXTRACT || process.env.OLLAMA_MODEL || 'qwen3:235b',
-  diff:    process.env.OLLAMA_MODEL_DIFF    || process.env.OLLAMA_MODEL || 'deepseek-v3',
-  draft:   process.env.OLLAMA_MODEL_DRAFT   || process.env.OLLAMA_MODEL || 'deepseek-v3',
-  default: process.env.OLLAMA_MODEL || 'qwen3:235b'
+// Cascades are env-overridable (comma-separated LiteLLM model_names). Defaults are
+// free-local-first, then the two cheap cloud lanes Dale named.
+const CASCADE = {
+  extract: (process.env.FP_MODELS_EXTRACT || 'local-worker-large,local-worker,qwen3-flash-thinking,deepseek-flash').split(','),
+  diff:    (process.env.FP_MODELS_DIFF    || 'local-worker-large,qwen3-flash-thinking,deepseek-flash').split(','),
+  draft:   (process.env.FP_MODELS_DRAFT   || 'local-worker-large,qwen3-flash-thinking,deepseek-flash').split(','),
+  vision:  (process.env.FP_MODELS_VISION  || 'local-vision,fusion-vision').split(','),
 };
+const pick = (task) => (CASCADE[task] || CASCADE.extract).map((m) => m.trim()).filter(Boolean);
 
-async function ollamaChat(prompt, { json = false, task = 'default' } = {}) {
-  const res = await fetch(`${OLLAMA_URL}/api/generate`, {
+async function chat(model, messages, { json = false } = {}) {
+  const res = await fetch(`${BASE}/v1/chat/completions`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${KEY}` },
     body: JSON.stringify({
-      model: MODELS[task] || MODELS.default,
-      prompt,
-      stream: false,
-      ...(json ? { format: 'json' } : {}),
-      options: { temperature: 0.2 }
-    })
-  });
-  if (!res.ok) throw new Error(`ollama ${res.status}`);
-  const data = await res.json();
-  return data.response;
-}
-
-async function claudeChat(prompt, { system, images = [] } = {}) {
-  const content = [
-    ...images.map((b64) => ({
-      type: 'image',
-      source: { type: 'base64', media_type: 'image/png', data: b64 }
-    })),
-    { type: 'text', text: prompt }
-  ];
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: CLAUDE_MODEL,
+      model,
+      messages,
+      temperature: 0.2,
       max_tokens: 2000,
-      ...(system ? { system } : {}),
-      messages: [{ role: 'user', content }]
-    })
+      ...(json ? { response_format: { type: 'json_object' } } : {}),
+    }),
+    signal: AbortSignal.timeout(90000),
   });
-  if (!res.ok) throw new Error(`claude ${res.status}: ${await res.text()}`);
+  if (!res.ok) throw new Error(`${model} ${res.status}: ${(await res.text()).slice(0, 160)}`);
   const data = await res.json();
-  return data.content.filter((c) => c.type === 'text').map((c) => c.text).join('\n');
+  return data.choices?.[0]?.message?.content ?? '';
 }
 
 function tryParseJson(text) {
-  try {
-    const clean = text.replace(/```json|```/g, '').trim();
-    return JSON.parse(clean);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(text.replace(/```json|```/g, '').trim()); }
+  catch { return null; }
 }
 
 /**
- * Text task with schema validation. Hermes first; if output fails the
- * validator (or Ollama is down), escalate to Claude automatically.
- * @param {string} prompt
- * @param {(parsed:any)=>boolean} validate  returns true if output acceptable
+ * JSON task with schema validation. Walks the task's cheapest-first cascade; the
+ * first model whose parsed output passes `validate` wins.
  */
-export async function aiJson(prompt, validate = () => true, task = "extract") {
-  if (AI_PRIMARY === 'ollama') {
+export async function aiJson(prompt, validate = () => true, task = 'extract') {
+  let lastErr;
+  for (const model of pick(task)) {
     try {
-      const out = tryParseJson(await ollamaChat(prompt, { json: true, task }));
-      if (out && validate(out)) return { result: out, engine: MODELS[task] || MODELS.default };
+      const out = tryParseJson(await chat(model, [{ role: 'user', content: prompt }], { json: true }));
+      if (out && validate(out)) return { result: out, engine: model };
+      lastErr = new Error(`${model}: output failed validation`);
     } catch (e) {
-      console.warn(`[ai] hermes unavailable/failed: ${e.message} → claude`);
+      lastErr = e;
+      console.warn(`[ai] ${model} miss (${e.message}) → next`);
     }
   }
-  const out = tryParseJson(await claudeChat(prompt));
-  if (!out) throw new Error('AI JSON parse failed on both engines');
-  return { result: out, engine: 'claude' };
+  throw new Error(`aiJson exhausted cascade for ${task}: ${lastErr?.message}`);
 }
 
-/** Plain text task (drafts, summaries). Hermes first, Claude fallback. */
-export async function aiText(prompt, task = "draft") {
-  if (AI_PRIMARY === 'ollama') {
+/** Plain-text task (drafts, summaries). Cheapest-first cascade. */
+export async function aiText(prompt, task = 'draft') {
+  let lastErr;
+  for (const model of pick(task)) {
     try {
-      return { result: await ollamaChat(prompt, { task }), engine: MODELS[task] || MODELS.default };
-    } catch (e) {
-      console.warn(`[ai] hermes failed: ${e.message} → claude`);
-    }
+      const out = await chat(model, [{ role: 'user', content: prompt }]);
+      if (out?.trim()) return { result: out, engine: model };
+    } catch (e) { lastErr = e; console.warn(`[ai] ${model} miss (${e.message}) → next`); }
   }
-  return { result: await claudeChat(prompt), engine: 'claude' };
+  throw new Error(`aiText exhausted cascade for ${task}: ${lastErr?.message}`);
 }
 
-/** Vision extraction — Claude only (Hermes farm is text-only). */
+/** Vision extraction from a screenshot — free local vision models (gemma4 / llama3.2-vision). */
 export async function aiVisionJson(prompt, pngBase64) {
-  const out = tryParseJson(
-    await claudeChat(prompt, {
-      system: 'Respond ONLY with valid JSON. No preamble, no markdown fences.',
-      images: [pngBase64]
-    })
-  );
-  if (!out) throw new Error('Vision JSON parse failed');
-  return { result: out, engine: 'claude-vision' };
+  let lastErr;
+  for (const model of pick('vision')) {
+    try {
+      const out = tryParseJson(await chat(model, [{
+        role: 'user',
+        content: [
+          { type: 'text', text: `${prompt}\nRespond ONLY with valid JSON. No preamble, no markdown.` },
+          { type: 'image_url', image_url: { url: `data:image/png;base64,${pngBase64}` } },
+        ],
+      }], { json: true }));
+      if (out) return { result: out, engine: model };
+      lastErr = new Error(`${model}: no JSON`);
+    } catch (e) { lastErr = e; console.warn(`[ai] vision ${model} miss (${e.message}) → next`); }
+  }
+  throw new Error(`aiVisionJson exhausted vision cascade: ${lastErr?.message}`);
 }
