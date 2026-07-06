@@ -57,7 +57,9 @@ async function autoScroll(page) {
 
 export async function tier2(vendor) {
   const { chromium } = await import('playwright'); // lazy — only loads when needed
-  const browser = await chromium.launch({ headless: true });
+  // --disable-http2: some CDNs (Intuit/Adobe) reset HTTP/2 to headless clients (ERR_HTTP2_PROTOCOL_ERROR);
+  // forcing HTTP/1.1 gets us in. --no-sandbox for headless root on CLAW.
+  const browser = await chromium.launch({ headless: true, args: ['--disable-http2', '--no-sandbox'] });
   try {
     const context = await browser.newContext({
       userAgent: 'FetchPriceBot/1.0 (+https://fetch-price.com/bot)',
