@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import HeroInstrument from '../components/HeroInstrument.astro';
+import HowItWorks from '../components/HowItWorks.astro';
 import VendorRow from '../components/VendorRow.astro';
 import AlertCapture from '../components/AlertCapture.astro';
 import { getVendors, getChangeEvents, getVendorPage, computeStats, bestPrice } from '../lib/data';
@@ -70,40 +71,8 @@ const categories = [...new Set(vendors.map((v) => v.category))].map((cat) => ({
     </div>
   </section>
 
-  <!-- 01 / 02 / 03 editorial -->
-  <section class="section" id="how">
-    <div class="wrap">
-      <div class="step">
-        <div class="step-num">01</div>
-        <div class="step-body">
-          <h2 class="headline-lg">Add your stack</h2>
-          <p class="body-lg">Pick the tools you pay for — or paste an invoice and we match the vendors. {stats.vendorCount} vendors tracked across {stats.categoryCount} {stats.categoryCount === 1 ? 'category' : 'categories'} today, and growing.</p>
-        </div>
-      </div>
-      <hr class="rule step-rule" />
-      <div class="step step-reverse">
-        <div class="step-num">02</div>
-        <div class="step-body">
-          <h2 class="headline-lg">We check every pricing page, every day</h2>
-          <p class="body-lg">{hasMoves ? 'The moment a plan moves, we record it. Here is what has moved recently:' : 'The moment a plan moves, we record it and date it. A sample of what we are watching right now:'}</p>
-          <div class="moved card">
-            {movedPages.filter(Boolean).map((page) => {
-              const pl = bestPrice(page!.plans);
-              return <VendorRow vendor={page!.vendor} plan={pl} points={pl ? page!.history[pl.name] : []} />;
-            })}
-          </div>
-        </div>
-      </div>
-      <hr class="rule step-rule" />
-      <div class="step">
-        <div class="step-num">03</div>
-        <div class="step-body">
-          <h2 class="headline-lg">When a price rises, we find you a better deal</h2>
-          <p class="body-lg">Every alert comes with cheaper alternatives and any live deal on the table — so you can switch and save, not just absorb the increase. We flag packaging changes too: features moved to higher tiers, seat minimums, credit-rate changes. The switch links are affiliate, which is how the tool stays free for you.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- how it works — visual infographic ending in a mock of the actual alert -->
+  <HowItWorks />
 
   <!-- categories index -->
   <section class="section section-alt">

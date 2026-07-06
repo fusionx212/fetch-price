@@ -2,6 +2,15 @@ import type { Plan, PricePoint, ChangeType } from './types';
 
 const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
+const CAT_LABEL: Record<string, string> = {
+  crm: 'CRM', hr: 'HR', 'ai-tools': 'AI Tools', 'dev-hosting': 'Dev & Hosting',
+  'project-management': 'Project Management', ecommerce: 'E-commerce', docs: 'Docs & E-sign',
+  comms: 'Comms', saas: 'Software',
+};
+export function categoryLabel(cat: string): string {
+  return CAT_LABEL[cat] ?? cat.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 const SYMBOL: Record<string, string> = { GBP: '£', USD: '$', EUR: '€' };
 export function money(price: number | null, currency = 'GBP'): string {
   if (price == null) return 'POA';

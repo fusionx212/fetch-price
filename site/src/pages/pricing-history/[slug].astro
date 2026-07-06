@@ -2,9 +2,9 @@
 import Base from '../../layouts/Base.astro';
 import PriceChart from '../../components/PriceChart.astro';
 import AlertCapture from '../../components/AlertCapture.astro';
-import Alternatives from '../../components/Alternatives.astro';
-import { getVendors, getVendorPage, bestPrice } from '../../lib/data';
-import { priceLabel, checkedAgo, fullDate, CHANGE_LABEL, deltaChip, dealInfo } from '../../lib/format';
+import SwitchAndSave from '../../components/SwitchAndSave.astro';
+import { getVendors, getVendorPage, getVendorSummaries, bestPrice } from '../../lib/data';
+import { priceLabel, checkedAgo, fullDate, CHANGE_LABEL, deltaChip, dealInfo, categoryLabel } from '../../lib/format';
 import { productSchema, breadcrumb } from '../../lib/schema';
 
 export async function getStaticPaths() {
@@ -16,7 +16,7 @@ const { slug } = Astro.params;
 const page = await getVendorPage(slug!);
 if (!page) return Astro.redirect('/pricing-history/');
 const { vendor, plans, history, events } = page;
-const allVendors = await getVendors();
+const summaries = await getVendorSummaries();
 const site = Astro.site?.toString().replace(/\/$/, '') || 'https://fetch-price.com';
 
 const series = plans.map((p) => ({ name: p.name, points: history[p.name] ?? [] }));
@@ -57,7 +57,7 @@ const jsonLd = [
 
     <header class="vhead" style={`--category-accent:${catAccent}`}>
       <div>
-        <p class="label eyebrow">{vendor.category} · pricing history</p>
+        <p class="label eyebrow">{categoryLabel(vendor.category)} · pricing history</p>
         <h1 class="headline-lg">{vendor.name}</h1>
         <p class="fresh vhead-fresh"><span class="dot"></span>{checkedAgo(page.lastChecked)} · from {vendor.pricing_url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}</p>
       </div>
@@ -125,9 +125,9 @@ const jsonLd = [
       <AlertCapture vendorName={vendor.name} slug={vendor.slug} />
     </section>
 
-    <!-- alternatives -->
+    <!-- switch & save: the payoff — cheaper alternatives from our own data -->
     <section class="alt-sec">
-      <Alternatives current={vendor} all={allVendors} />
+      <SwitchAndSave current={vendor} currentCheapest={cheapest} summaries={summaries} />
     </section>
   </article>
 </Base>

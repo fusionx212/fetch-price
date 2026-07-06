@@ -116,6 +116,34 @@ export async function getChangeEvents(limit = 60): Promise<ChangeEvent[]> {
   return demoChangeEvents().slice(0, limit);
 }
 
+export interface VendorSummary { vendor: Vendor; cheapest: Plan | null; }
+
+/** All publishable vendors with their cheapest PAID plan — powers Switch & Save comparisons. */
+export async function getVendorSummaries(): Promise<VendorSummary[]> {
+  const cheapestPaid = (plans: Plan[]): Plan | null => {
+    const paid = plans.filter((p) => typeof p.price === 'number' && (p.price as number) > 0);
+    return paid.length ? paid.reduce((a, b) => ((a.price as number) <= (b.price as number) ? a : b)) : bestPrice(plans);
+  };
+  if (isLive) {
+    const vendors = await liveVendors();
+    const { data: snaps } = await supabase!
+      .from('fp_snapshots').select('vendor_id, captured_at, extracted')
+      .order('captured_at', { ascending: false }).limit(3000);
+    const latest = new Map<string, Plan[]>();
+    for (const s of (snaps ?? [])) {
+      const vid = (s as any).vendor_id;
+      if (!latest.has(vid)) latest.set(vid, (s as any).extracted?.plans ?? []);
+    }
+    return vendors
+      .filter((v) => isPublishable(latest.get(v.id) ?? []))
+      .map((v) => ({ vendor: v, cheapest: cheapestPaid(latest.get(v.id) ?? []) }));
+  }
+  return DEMO_VENDORS.map((dv) => {
+    const { plans, history, events, ...v } = dv;
+    return { vendor: v as Vendor, cheapest: cheapestPaid(plans) };
+  });
+}
+
 /** Cheapest current price across a vendor's plans (for row/wire display). */
 export function bestPrice(plans: Plan[]): Plan | null {
   const priced = plans.filter((p) => typeof p.price === 'number');

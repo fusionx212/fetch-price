@@ -1,0 +1,90 @@
+---
+// Visual "how it works" infographic. Three steps ending in a mock of the actual alert,
+// so a visitor sees exactly what they'll receive — removes the "what do I do / what do I
+// get" confusion. Self-contained (CSS/SVG, no assets).
+---
+<section class="hiw" id="how-it-works">
+  <div class="wrap">
+    <p class="label eyebrow">How it works</p>
+    <h2 class="headline-lg hiw-head">Sign up once. We do the watching.</h2>
+    <p class="body-lg hiw-sub">You don't check anything. You don't log in every month. When a tool you pay for gets pricier, the alert comes to you — with a cheaper option already lined up.</p>
+
+    <div class="hiw-flow">
+      <div class="hiw-step">
+        <span class="hiw-num">1</span>
+        <h3 class="hiw-t">Add the tools you pay for</h3>
+        <p class="hiw-p">Pick a tool — or your whole stack — and drop in your email. No account, no card, 10 seconds.</p>
+        <div class="hiw-mini hiw-mini-add">
+          <span class="hiw-chip">Slack</span><span class="hiw-chip">Xero</span><span class="hiw-chip">Notion</span>
+          <span class="hiw-watch">Watch it</span>
+        </div>
+      </div>
+
+      <div class="hiw-arrow" aria-hidden="true">→</div>
+
+      <div class="hiw-step">
+        <span class="hiw-num">2</span>
+        <h3 class="hiw-t">We check their prices every day</h3>
+        <p class="hiw-p">We track each tool's list price and any live deal, and keep a dated history — so we catch the moment anything moves.</p>
+        <div class="hiw-mini hiw-mini-track">
+          <span class="hiw-track-row"><b>Slack Pro</b><span class="data">£7.00</span></span>
+          <span class="hiw-track-row hiw-track-dim"><b>checked daily</b><span class="hiw-dot"></span></span>
+        </div>
+      </div>
+
+      <div class="hiw-arrow" aria-hidden="true">→</div>
+
+      <div class="hiw-step">
+        <span class="hiw-num">3</span>
+        <h3 class="hiw-t">Price rises? You get the alert — with a cheaper switch</h3>
+        <p class="hiw-p">One email the moment it changes: what it was, what it is now, and a cheaper alternative you could move to. That's it.</p>
+        <div class="hiw-mini hiw-alert">
+          <span class="hiw-alert-kicker">Fetch-Price alert</span>
+          <span class="hiw-alert-line"><b>Slack Pro</b> <span class="hiw-rise">▲ £7.00 (+11%)</span></span>
+          <span class="hiw-alert-switch">Switch &amp; save: <b>Chanty £4</b> <span class="hiw-save">save 43%</span></span>
+          <span class="hiw-alert-btn">See the comparison →</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hiw-cta">
+      <a href="#watch" class="btn btn-primary">Watch my stack — free</a>
+      <span class="hiw-cta-note">Free forever. One email per change, not a newsletter.</span>
+    </div>
+  </div>
+</section>
+<style>
+  .hiw{padding-block:96px}
+  .hiw-head{margin-top:6px}
+  .hiw-sub{margin-top:14px; color:var(--color-ink-2)}
+  .hiw-flow{display:grid; grid-template-columns:1fr auto 1fr auto 1fr; gap:20px; align-items:stretch; margin-top:44px}
+  .hiw-step{background:var(--color-surface-high); border:1px solid var(--color-hairline); border-radius:14px; padding:24px; box-shadow:var(--shadow-1); display:flex; flex-direction:column}
+  .hiw-num{width:32px; height:32px; border-radius:9999px; background:var(--color-accent); color:var(--color-on-accent); font-family:var(--font-mono); font-weight:600; display:flex; align-items:center; justify-content:center; margin-bottom:14px}
+  .hiw-t{font-family:var(--font-sans); font-weight:600; font-size:1.1rem; color:var(--color-ink); line-height:1.25}
+  .hiw-p{margin-top:8px; color:var(--color-ink-2); font-size:.95rem; line-height:1.5; flex:1}
+  .hiw-arrow{display:flex; align-items:center; font-size:1.6rem; color:var(--color-ink-3)}
+
+  .hiw-mini{margin-top:16px; border-top:1px solid var(--color-hairline); padding-top:14px; font-size:.85rem}
+  .hiw-mini-add{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+  .hiw-chip{background:var(--color-surface-lowest); border:1px solid var(--color-hairline); border-radius:6px; padding:3px 9px; font-weight:500; color:var(--color-ink)}
+  .hiw-watch{margin-left:auto; background:var(--color-accent); color:var(--color-on-accent); border-radius:6px; padding:4px 10px; font-weight:600; font-size:.8rem}
+  .hiw-track-row{display:flex; justify-content:space-between; align-items:center; padding:5px 0}
+  .hiw-track-dim{color:var(--color-ink-3)}
+  .hiw-dot{width:7px; height:7px; border-radius:9999px; background:var(--color-drop); animation:pulse 2s ease-in-out infinite}
+
+  .hiw-alert{display:flex; flex-direction:column; gap:7px; background:var(--color-surface); border-radius:8px; padding:12px 12px 14px; margin-top:16px; border:1px solid var(--color-hairline)}
+  .hiw-alert-kicker{font-size:.7rem; letter-spacing:.07em; text-transform:uppercase; color:var(--color-accent); font-weight:600}
+  .hiw-alert-line b, .hiw-alert-switch b{color:var(--color-ink)}
+  .hiw-rise{font-family:var(--font-mono); color:var(--color-rise); font-weight:600}
+  .hiw-alert-switch{font-size:.9rem; color:var(--color-ink-2)}
+  .hiw-save{background:var(--color-drop-container); color:var(--color-drop); border-radius:5px; padding:1px 6px; font-family:var(--font-mono); font-size:.78rem; font-weight:600}
+  .hiw-alert-btn{margin-top:4px; color:var(--color-accent); font-weight:600; font-size:.85rem}
+
+  .hiw-cta{display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-top:40px}
+  .hiw-cta-note{color:var(--color-ink-3); font-size:.9rem}
+
+  @media (max-width:860px){
+    .hiw-flow{grid-template-columns:1fr; gap:14px}
+    .hiw-arrow{transform:rotate(90deg); justify-content:center; padding:2px 0}
+  }
+</style>

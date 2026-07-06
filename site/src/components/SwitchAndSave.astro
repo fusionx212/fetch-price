@@ -1,0 +1,81 @@
+---
+// The payoff of an alert: "X went up — here's a cheaper switch." Built entirely from our
+// own data (every vendor's current price + deal), so it delivers value with zero affiliate
+// approvals. The "See it" link becomes an affiliate link once approved (integrity: approved
+// links only change the href + rel, never which tools appear or their order).
+import type { Vendor, Plan } from '../lib/types';
+import type { VendorSummary } from '../lib/data';
+import { money, priceLabel, dealInfo } from '../lib/format';
+
+interface Props { current: Vendor; currentCheapest: Plan | null; summaries: VendorSummary[]; }
+const { current, currentCheapest, summaries } = Astro.props;
+const curCur = currentCheapest?.currency ?? 'GBP';
+const curPrice = currentCheapest?.price ?? null;
+
+// same category, PAID (exclude free tiers — a £0 "save 100%" is meaningless), sorted cheapest first
+const sameCat = summaries.filter((s) =>
+  s.vendor.category === current.category &&
+  s.vendor.slug !== current.slug &&
+  s.cheapest?.price != null && (s.cheapest.price as number) > 0);
+const cheaper = sameCat
+  .filter((s) => s.cheapest!.currency === curCur && curPrice != null && (s.cheapest!.price as number) < (curPrice as number))
+  .sort((a, b) => (a.cheapest!.price as number) - (b.cheapest!.price as number))
+  .slice(0, 4);
+// fallback: if none strictly cheaper, show the nearest same-category options
+const alts = (cheaper.length ? cheaper : sameCat.sort((a, b) => (a.cheapest!.price as number) - (b.cheapest!.price as number)).slice(0, 3));
+const saving = (p: number) => (curPrice ? Math.round((1 - p / (curPrice as number)) * 100) : 0);
+const outbound = (v: Vendor) => (v.affiliate_status === 'approved' && v.affiliate_url ? v.affiliate_url : `/pricing-history/${v.slug}/`);
+const isAff = (v: Vendor) => v.affiliate_status === 'approved' && !!v.affiliate_url;
+---
+{alts.length > 0 && (
+  <section class="switch">
+    <p class="label eyebrow">Switch &amp; save</p>
+    <h2 class="headline-md">{cheaper.length ? `Cheaper alternatives to ${current.name}` : `Compare ${current.name} with the alternatives`}</h2>
+    <p class="switch-sub">Same category, current prices from our own tracking. {curPrice != null && `${current.name} starts at ${money(curPrice, curCur)}.`}</p>
+
+    <div class="switch-table card">
+      <div class="switch-row switch-current">
+        <span class="switch-name">{current.name} <span class="label switch-tag">you're looking at</span></span>
+        <span class="data switch-price">{currentCheapest ? priceLabel(currentCheapest) : 'POA'}</span>
+        <span class="switch-cta-cell"></span>
+      </div>
+      {alts.map((s) => {
+        const p = s.cheapest!;
+        const d = dealInfo(p);
+        const save = saving(p.price as number);
+        return (
+          <div class="switch-row">
+            <span class="switch-name">
+              {s.vendor.name}
+              {save > 0 && curPrice != null && p.currency === curCur && <span class="chip chip-drop switch-save">save {save}%</span>}
+              {d && <span class="chip chip-drop switch-deal">deal · save {d.save}%</span>}
+            </span>
+            <span class="data switch-price">{priceLabel(p)}{d && <span class="switch-dealprice"> → {d.price}</span>}</span>
+            <span class="switch-cta-cell"><a href={outbound(s.vendor)} class="switch-cta" rel={isAff(s.vendor) ? 'sponsored nofollow' : ''}>{isAff(s.vendor) ? 'See deal →' : 'Compare →'}</a></span>
+          </div>
+        );
+      })}
+    </div>
+    <p class="switch-disc">Prices are each vendor's published list price, updated regularly. Some outbound links may earn us a commission — it never changes which tools we show or their order.</p>
+  </section>
+)}
+<style>
+  .switch{margin-top:8px}
+  .switch h2{margin-top:4px}
+  .switch-sub{margin-top:6px; color:var(--color-ink-2)}
+  .switch-table{margin-top:18px; padding:6px 18px}
+  .switch-row{display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:18px; padding:15px 4px}
+  .switch-row + .switch-row{border-top:1px solid var(--color-hairline)}
+  .switch-current{background:var(--color-surface-lowest); margin:0 -18px; padding-inline:22px; border-radius:8px 8px 0 0}
+  .switch-name{font-weight:600; color:var(--color-ink); font-size:1.05rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .switch-tag{font-weight:500}
+  .switch-price{font-size:1.1rem; text-align:right; white-space:nowrap}
+  .switch-dealprice{color:var(--color-drop); font-weight:600}
+  .switch-cta-cell{text-align:right; min-width:90px}
+  .switch-cta{color:var(--color-accent); font-weight:600; font-size:.95rem}
+  .switch-disc{margin-top:14px; color:var(--color-ink-3); font-size:.8rem}
+  @media (max-width:600px){
+    .switch-row{grid-template-columns:1fr auto; row-gap:6px}
+    .switch-cta-cell{grid-column:1/-1; text-align:left}
+  }
+</style>

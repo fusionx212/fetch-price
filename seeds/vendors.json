@@ -2,420 +2,420 @@
   {
     "name": "Notion",
     "slug": "notion",
-    "category": "saas",
+    "category": "project-management",
     "pricing_url": "https://www.notion.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Monday.com",
     "slug": "monday",
-    "category": "saas",
+    "category": "project-management",
     "pricing_url": "https://monday.com/pricing",
     "requires_browser": true
   },
   {
     "name": "ClickUp",
     "slug": "clickup",
-    "category": "saas",
+    "category": "project-management",
     "pricing_url": "https://clickup.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Asana",
     "slug": "asana",
-    "category": "saas",
+    "category": "project-management",
     "pricing_url": "https://asana.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Slack",
     "slug": "slack",
-    "category": "saas",
+    "category": "comms",
     "pricing_url": "https://slack.com/intl/en-gb/pricing",
     "requires_browser": true
   },
   {
     "name": "Zoom",
     "slug": "zoom",
-    "category": "saas",
+    "category": "comms",
     "pricing_url": "https://www.zoom.com/en/pricing/",
     "requires_browser": true
   },
   {
     "name": "Xero",
     "slug": "xero",
-    "category": "saas",
+    "category": "accounting",
     "pricing_url": "https://www.xero.com/uk/pricing-plans/",
     "requires_browser": false
   },
   {
     "name": "QuickBooks",
     "slug": "quickbooks",
-    "category": "saas",
+    "category": "accounting",
     "pricing_url": "https://quickbooks.intuit.com/uk/pricing/",
     "requires_browser": true
   },
   {
     "name": "Sage Accounting",
     "slug": "sage-accounting",
-    "category": "saas",
+    "category": "accounting",
     "pricing_url": "https://www.sage.com/en-gb/products/sage-business-cloud-accounting/pricing/",
     "requires_browser": true
   },
   {
     "name": "FreeAgent",
     "slug": "freeagent",
-    "category": "saas",
+    "category": "accounting",
     "pricing_url": "https://www.freeagent.com/pricing/",
     "requires_browser": false
   },
   {
     "name": "HubSpot",
     "slug": "hubspot",
-    "category": "saas",
+    "category": "crm",
     "pricing_url": "https://www.hubspot.com/pricing/marketing",
     "requires_browser": true
   },
   {
     "name": "Pipedrive",
     "slug": "pipedrive",
-    "category": "saas",
+    "category": "crm",
     "pricing_url": "https://www.pipedrive.com/en/pricing",
     "requires_browser": true
   },
   {
     "name": "Canva",
     "slug": "canva",
-    "category": "saas",
+    "category": "design",
     "pricing_url": "https://www.canva.com/en_gb/pricing/",
     "requires_browser": true
   },
   {
     "name": "Figma",
     "slug": "figma",
-    "category": "saas",
+    "category": "design",
     "pricing_url": "https://www.figma.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "Adobe Creative Cloud (Teams)",
     "slug": "adobe-cc-teams",
-    "category": "saas",
+    "category": "design",
     "pricing_url": "https://www.adobe.com/uk/creativecloud/business/teams/plans.html",
     "requires_browser": true
   },
   {
     "name": "GitHub",
     "slug": "github",
-    "category": "saas",
+    "category": "dev-hosting",
     "pricing_url": "https://github.com/pricing",
     "requires_browser": false
   },
   {
     "name": "Atlassian Jira",
     "slug": "jira",
-    "category": "saas",
+    "category": "project-management",
     "pricing_url": "https://www.atlassian.com/software/jira/pricing",
     "requires_browser": true
   },
   {
     "name": "Microsoft 365 Business",
     "slug": "microsoft-365-business",
-    "category": "saas",
+    "category": "office",
     "pricing_url": "https://www.microsoft.com/en-gb/microsoft-365/business/compare-all-microsoft-365-business-products",
     "requires_browser": true
   },
   {
     "name": "Google Workspace",
     "slug": "google-workspace",
-    "category": "saas",
+    "category": "office",
     "pricing_url": "https://workspace.google.com/intl/en_uk/pricing",
     "requires_browser": true
   },
   {
     "name": "Dropbox Business",
     "slug": "dropbox-business",
-    "category": "saas",
+    "category": "office",
     "pricing_url": "https://www.dropbox.com/business/plans-comparison",
     "requires_browser": true
   },
   {
     "name": "KashFlow",
     "slug": "kashflow",
-    "category": "saas",
+    "category": "accounting",
     "pricing_url": "https://www.kashflow.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "FreshBooks",
     "slug": "freshbooks",
-    "category": "saas",
+    "category": "accounting",
     "pricing_url": "https://www.freshbooks.com/en-gb/pricing",
     "requires_browser": true
   },
   {
     "name": "Crunch Accounting",
     "slug": "crunch-accounting",
-    "category": "saas",
+    "category": "accounting",
     "pricing_url": "https://www.crunch.co.uk/pricing/",
     "requires_browser": true
   },
   {
     "name": "Zoho Books",
     "slug": "zoho-books",
-    "category": "saas",
+    "category": "accounting",
     "pricing_url": "https://www.zoho.com/books/pricing/",
     "requires_browser": true
   },
   {
     "name": "Salesforce",
     "slug": "salesforce",
-    "category": "saas",
+    "category": "crm",
     "pricing_url": "https://www.salesforce.com/uk/pricing/",
     "requires_browser": true
   },
   {
     "name": "Zoho CRM",
     "slug": "zoho-crm",
-    "category": "saas",
+    "category": "crm",
     "pricing_url": "https://www.zoho.com/crm/pricing/",
     "requires_browser": true
   },
   {
     "name": "Copper CRM",
     "slug": "copper-crm",
-    "category": "saas",
+    "category": "crm",
     "pricing_url": "https://www.copper.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Capsule CRM",
     "slug": "capsule-crm",
-    "category": "saas",
+    "category": "crm",
     "pricing_url": "https://capsulecrm.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "Basecamp",
     "slug": "basecamp",
-    "category": "saas",
+    "category": "project-management",
     "pricing_url": "https://basecamp.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Wrike",
     "slug": "wrike",
-    "category": "saas",
+    "category": "project-management",
     "pricing_url": "https://www.wrike.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "Smartsheet",
     "slug": "smartsheet",
-    "category": "saas",
+    "category": "project-management",
     "pricing_url": "https://www.smartsheet.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Airtable",
     "slug": "airtable",
-    "category": "saas",
+    "category": "project-management",
     "pricing_url": "https://airtable.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Microsoft Teams",
     "slug": "microsoft-teams",
-    "category": "saas",
+    "category": "comms",
     "pricing_url": "https://www.microsoft.com/en-gb/microsoft-teams/compare-microsoft-teams-plans",
     "requires_browser": true
   },
   {
     "name": "RingCentral",
     "slug": "ringcentral",
-    "category": "saas",
+    "category": "comms",
     "pricing_url": "https://www.ringcentral.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Dialpad",
     "slug": "dialpad",
-    "category": "saas",
+    "category": "comms",
     "pricing_url": "https://www.dialpad.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "Miro",
     "slug": "miro",
-    "category": "saas",
+    "category": "project-management",
     "pricing_url": "https://miro.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "Sketch",
     "slug": "sketch",
-    "category": "saas",
+    "category": "design",
     "pricing_url": "https://www.sketch.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "Mural",
     "slug": "mural",
-    "category": "saas",
+    "category": "project-management",
     "pricing_url": "https://www.mural.co/pricing",
     "requires_browser": true
   },
   {
     "name": "GitLab",
     "slug": "gitlab",
-    "category": "saas",
+    "category": "dev-hosting",
     "pricing_url": "https://about.gitlab.com/pricing/",
     "requires_browser": false
   },
   {
     "name": "DigitalOcean",
     "slug": "digitalocean",
-    "category": "saas",
+    "category": "dev-hosting",
     "pricing_url": "https://www.digitalocean.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Vercel",
     "slug": "vercel",
-    "category": "saas",
+    "category": "dev-hosting",
     "pricing_url": "https://vercel.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Netlify",
     "slug": "netlify",
-    "category": "saas",
+    "category": "dev-hosting",
     "pricing_url": "https://www.netlify.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "Cloudflare",
     "slug": "cloudflare",
-    "category": "saas",
+    "category": "dev-hosting",
     "pricing_url": "https://www.cloudflare.com/plans/",
     "requires_browser": true
   },
   {
     "name": "CharlieHR",
     "slug": "charliehr",
-    "category": "saas",
+    "category": "hr",
     "pricing_url": "https://www.charliehr.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Employment Hero",
     "slug": "employment-hero",
-    "category": "saas",
+    "category": "hr",
     "pricing_url": "https://employmenthero.com/uk/pricing/",
     "requires_browser": true
   },
   {
     "name": "Mailchimp",
     "slug": "mailchimp",
-    "category": "saas",
+    "category": "marketing",
     "pricing_url": "https://mailchimp.com/en-gb/pricing/",
     "requires_browser": true
   },
   {
     "name": "Brevo",
     "slug": "brevo",
-    "category": "saas",
+    "category": "marketing",
     "pricing_url": "https://www.brevo.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "Semrush",
     "slug": "semrush",
-    "category": "saas",
+    "category": "marketing",
     "pricing_url": "https://www.semrush.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "ActiveCampaign",
     "slug": "activecampaign",
-    "category": "saas",
+    "category": "marketing",
     "pricing_url": "https://www.activecampaign.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "Klaviyo",
     "slug": "klaviyo",
-    "category": "saas",
+    "category": "marketing",
     "pricing_url": "https://www.klaviyo.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Zendesk",
     "slug": "zendesk",
-    "category": "saas",
+    "category": "support",
     "pricing_url": "https://www.zendesk.co.uk/pricing/",
     "requires_browser": true
   },
   {
     "name": "Intercom",
     "slug": "intercom",
-    "category": "saas",
+    "category": "support",
     "pricing_url": "https://www.intercom.com/pricing",
     "requires_browser": true
   },
   {
     "name": "Freshdesk",
     "slug": "freshdesk",
-    "category": "saas",
+    "category": "support",
     "pricing_url": "https://www.freshworks.com/freshdesk/pricing/",
     "requires_browser": true
   },
   {
     "name": "DocuSign",
     "slug": "docusign",
-    "category": "saas",
+    "category": "docs",
     "pricing_url": "https://www.docusign.com/pricing",
     "requires_browser": true
   },
   {
     "name": "PandaDoc",
     "slug": "pandadoc",
-    "category": "saas",
+    "category": "docs",
     "pricing_url": "https://www.pandadoc.com/pricing/",
     "requires_browser": true
   },
   {
     "name": "ChatGPT Teams",
     "slug": "chatgpt-teams",
-    "category": "saas",
+    "category": "ai-tools",
     "pricing_url": "https://openai.com/chatgpt/pricing/",
     "requires_browser": true
   },
   {
     "name": "Grammarly Business",
     "slug": "grammarly-business",
-    "category": "saas",
+    "category": "ai-tools",
     "pricing_url": "https://www.grammarly.com/business/pricing",
     "requires_browser": true
   },
   {
     "name": "Jasper AI",
     "slug": "jasper-ai",
-    "category": "saas",
+    "category": "ai-tools",
     "pricing_url": "https://www.jasper.ai/pricing",
     "requires_browser": true
   },
   {
     "name": "Perplexity Pro",
     "slug": "perplexity-pro",
-    "category": "saas",
+    "category": "ai-tools",
     "pricing_url": "https://www.perplexity.ai/pricing",
     "requires_browser": true
   },
   {
     "name": "BigCommerce",
     "slug": "bigcommerce",
-    "category": "saas",
+    "category": "ecommerce",
     "pricing_url": "https://www.bigcommerce.com/pricing/",
     "requires_browser": true
   }
