@@ -1,21 +1,24 @@
 // Prompt templates. Keep terse — Hermes handles these; Claude only on escalation.
 
 export const EXTRACT_SCHEMA_HINT = `Return JSON exactly in this shape:
-{"plans":[{"name":"","price":0,"currency":"GBP","period":"month|year|usage","unit":"per seat|flat|per GB|...","features":["..."],"notes":""}]}
+{"plans":[{"name":"","price":0,"deal_price":null,"deal_note":null,"currency":"GBP","period":"month|year|usage","unit":"per seat|flat|per GB|...","features":["..."],"notes":""}]}
 Use null for unknown price ("contact sales" plans). No other keys.
 
-PRICING RULES — get the STANDARD price, not a deal:
-- Capture the STANDARD / regular / ongoing list price per plan. IGNORE promotional,
-  introductory, "first N months", "was/now", limited-time, "save X%", trial, or
-  discounted prices. If both a promo and a standard price show, use the STANDARD
-  (the ongoing price after any intro period).
+PRICING RULES — capture BOTH the standard price AND any current deal:
+- "price" = the STANDARD / regular / ongoing list price for the plan (the price after
+  any intro period ends). This is the baseline we track for price rises.
+- "deal_price" = the CURRENT promotional / introductory / discounted price if one is
+  offered right now (e.g. "first 3 months", "was £X now £Y", "save 20%", limited-time,
+  annual-billing discount). null if there is no active deal. deal_price must be LOWER
+  than price. "deal_note" = a short phrase describing the deal (e.g. "50% off first
+  3 months", "billed annually"), else null.
 - If the page defaults to an ANNUAL/"billed yearly" price but also shows a monthly
-  price, prefer the MONTHLY list price and set period="month". If only annual is shown,
-  use it and set period="year". Never divide or compute a price yourself — read the
-  stated figure.
-- price is the number only (no currency symbol). Set currency from the symbol shown
-  (£=GBP, $=USD, €=EUR); default GBP. unit = "per seat"/"per user"→"per seat", per line,
-  per GB, else "flat".`;
+  price, use the MONTHLY list price as "price" (period="month"); if the annual-billing
+  monthly-equivalent is cheaper, that's a deal_price with deal_note "billed annually".
+  If only annual is shown, use it and set period="year". Never compute a price yourself
+  beyond reading stated figures.
+- Prices are numbers only (no symbol). currency from the symbol (£=GBP, $=USD, €=EUR;
+  default GBP). unit: "per seat"/"per user"→"per seat", per line, per GB, else "flat".`;
 
 export const extractFromText = (pageText) => `You are extracting SaaS pricing plans from a pricing page's text content.
 ${EXTRACT_SCHEMA_HINT}

@@ -20,6 +20,16 @@ export function priceLabel(p: Plan): string {
   return `${money(p.price, p.currency)}${per}${per ? ' ' + period : period}`.trim();
 }
 
+/** Current deal on a plan: the promo price + % saving vs list, or null. */
+export function dealInfo(p: Plan): { price: string; save: number; note: string | null } | null {
+  if (p.deal_price == null || p.price == null || p.deal_price >= p.price) return null;
+  return {
+    price: money(p.deal_price, p.currency),
+    save: Math.round((1 - p.deal_price / p.price) * 100),
+    note: p.deal_note ?? null,
+  };
+}
+
 export function pct(oldP?: number | null, newP?: number | null): number | null {
   if (typeof oldP !== 'number' || typeof newP !== 'number' || oldP === 0) return null;
   return ((newP - oldP) / oldP) * 100;

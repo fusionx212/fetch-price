@@ -8,6 +8,8 @@ export function normalise(extracted) {
     .map((p) => ({
       name: (p.name || '').trim(),
       price: p.price ?? null,
+      deal_price: (typeof p.deal_price === 'number' && p.price && p.deal_price < p.price) ? p.deal_price : null,
+      deal_note: p.deal_note ?? null,
       currency: p.currency || 'GBP',
       period: p.period || 'month',
       unit: p.unit ?? null,

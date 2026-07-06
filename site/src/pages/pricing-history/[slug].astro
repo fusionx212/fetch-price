@@ -4,7 +4,7 @@ import PriceChart from '../../components/PriceChart.astro';
 import AlertCapture from '../../components/AlertCapture.astro';
 import Alternatives from '../../components/Alternatives.astro';
 import { getVendors, getVendorPage } from '../../lib/data';
-import { priceLabel, checkedAgo, fullDate, CHANGE_LABEL, deltaChip } from '../../lib/format';
+import { priceLabel, checkedAgo, fullDate, CHANGE_LABEL, deltaChip, dealInfo } from '../../lib/format';
 import { productSchema, breadcrumb } from '../../lib/schema';
 
 export async function getStaticPaths() {
@@ -62,12 +62,13 @@ const jsonLd = [
           const first = pts.map((x) => x.price).find((x) => typeof x === 'number');
           const last = [...pts].reverse().map((x) => x.price).find((x) => typeof x === 'number');
           const d = deltaChip(first, last);
+          const deal = dealInfo(p);
           return (
             <div class="plan-row">
-              <span class="plan-name">{p.name}</span>
-              <span class="plan-unit label">{p.unit ?? 'flat'} · {p.period === 'year' ? 'yearly' : p.period === 'usage' ? 'usage' : 'monthly'}</span>
+              <span class="plan-name">{p.name}{deal && <span class="chip chip-drop plan-deal">deal · save {deal.save}%</span>}</span>
+              <span class="plan-unit label">{p.unit ?? 'flat'} · {p.period === 'year' ? 'yearly' : p.period === 'usage' ? 'usage' : 'monthly'}{deal?.note ? ` · ${deal.note}` : ''}</span>
               {d ? <span class={`chip chip-${d.dir}`}>{d.text} 12mo</span> : <span class="chip chip-flat">no change</span>}
-              <span class="data plan-price">{priceLabel(p)}</span>
+              <span class="data plan-price">{deal ? <><s class="plan-list">{priceLabel(p)}</s> <span class="plan-dealprice">{deal.price}</span></> : priceLabel(p)}</span>
             </div>
           );
         })}
@@ -134,6 +135,9 @@ const jsonLd = [
   .plan-name{font-weight:600; color:var(--color-ink); font-size:1.05rem}
   .plan-unit{color:var(--color-ink-3)}
   .plan-price{font-size:1.15rem; text-align:right; min-width:120px}
+  .plan-deal{margin-left:10px; vertical-align:middle}
+  .plan-list{color:var(--color-ink-3); text-decoration-thickness:1px}
+  .plan-dealprice{color:var(--color-drop); font-weight:600}
 
   .log{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px}
   .log-item{display:grid; grid-template-columns:130px 120px 1fr; gap:16px; align-items:baseline; padding:16px 4px; border-top:1px solid var(--color-hairline)}

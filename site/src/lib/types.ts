@@ -17,7 +17,9 @@ export interface Vendor {
 
 export interface Plan {
   name: string;
-  price: number | null;      // null = "contact sales"
+  price: number | null;      // standard/list price; null = "contact sales"
+  deal_price?: number | null; // current promo/deal price if lower than list, else null
+  deal_note?: string | null;  // short description of the deal
   currency: string;
   period: 'month' | 'year' | 'usage' | string;
   unit: string | null;       // "per seat" | "flat" | "per GB" ...
