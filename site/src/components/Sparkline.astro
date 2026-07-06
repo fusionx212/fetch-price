@@ -12,9 +12,12 @@ const stroke = sp?.last === 'rise' ? 'var(--color-rise)' : sp?.last === 'drop' ?
     <path d={sp.line} fill="none" stroke={stroke} stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
   </svg>
 ) : (
-  <span class="label spark-flat">flat</span>
+  /* not enough history yet — a quiet baseline, not the word "flat" */
+  <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} class="spark spark-empty" role="img" aria-label="awaiting price history" preserveAspectRatio="none">
+    <line x1="2" x2={w - 2} y1={h / 2} y2={h / 2} stroke="var(--color-hairline)" stroke-width="1.5" stroke-dasharray="2 3" />
+  </svg>
 )}
 <style>
   .spark{overflow:visible}
-  .spark-flat{color:var(--color-ink-3)}
+  .spark-empty{opacity:.8}
 </style>

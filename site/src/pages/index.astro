@@ -10,14 +10,36 @@ const vendors = await getVendors();
 const events = await getChangeEvents(60);
 const stats = await computeStats();
 
-// hero = the vendor behind the biggest recent price move
-const topMove = events.find((e) => e.change_type === 'price_up') ?? events[0];
-const heroSlug = topMove?.vendor?.slug ?? vendors[0]?.slug;
-const heroPage = heroSlug ? await getVendorPage(heroSlug) : null;
+// Candidate order: the vendor behind the biggest recent move, then a few well-known
+// names, then everything else. Pick the first that is actually populated so the hero
+// instrument is never an empty card (day-1 has no change-events and some vendors may
+// not be scraped yet).
+const preferred = [
+  events.find((e) => e.change_type === 'price_up')?.vendor?.slug,
+  'slack', 'notion', 'monday', 'microsoft-365-business', 'google-workspace',
+  ...vendors.map((v) => v.slug),
+].filter(Boolean) as string[];
 
-// "most-moved" list for section 02
+let heroPage = null;
+const populatedPages: Awaited<ReturnType<typeof getVendorPage>>[] = [];
+for (const slug of [...new Set(preferred)]) {
+  const p = await getVendorPage(slug);
+  if (!p) continue;
+  const priced = p.plans.filter((x) => x.price != null).length;
+  if (priced >= 2) {
+    populatedPages.push(p);
+    if (!heroPage) heroPage = p;
+  }
+  if (populatedPages.length >= 7) break;
+}
+
+// Section 02: real recent moves if we have them, else a sample of tracked vendors
+// with their current prices (honest "what we watch", never an empty box).
+const hasMoves = events.length > 0;
 const movedSlugs = [...new Set(events.map((e) => e.vendor?.slug).filter(Boolean))].slice(0, 6) as string[];
-const movedPages = await Promise.all(movedSlugs.map((s) => getVendorPage(s)));
+const movedPages = hasMoves
+  ? await Promise.all(movedSlugs.map((s) => getVendorPage(s)))
+  : populatedPages.slice(0, 6);
 
 const categories = [...new Set(vendors.map((v) => v.category))].map((cat) => ({
   cat,
@@ -55,7 +77,7 @@ const categories = [...new Set(vendors.map((v) => v.category))].map((cat) => ({
         <div class="step-num">01</div>
         <div class="step-body">
           <h2 class="headline-lg">Add your stack</h2>
-          <p class="body-lg">Pick the tools you pay for — or paste an invoice and we match the vendors. {stats.vendorCount} vendors tracked across {stats.categoryCount} categories today, and growing.</p>
+          <p class="body-lg">Pick the tools you pay for — or paste an invoice and we match the vendors. {stats.vendorCount} vendors tracked across {stats.categoryCount} {stats.categoryCount === 1 ? 'category' : 'categories'} today, and growing.</p>
         </div>
       </div>
       <hr class="rule step-rule" />
@@ -63,7 +85,7 @@ const categories = [...new Set(vendors.map((v) => v.category))].map((cat) => ({
         <div class="step-num">02</div>
         <div class="step-body">
           <h2 class="headline-lg">We check every pricing page, every day</h2>
-          <p class="body-lg">The moment a plan moves, we record it. Here is what has moved recently:</p>
+          <p class="body-lg">{hasMoves ? 'The moment a plan moves, we record it. Here is what has moved recently:' : 'The moment a plan moves, we record it and date it. A sample of what we are watching right now:'}</p>
           <div class="moved card">
             {movedPages.filter(Boolean).map((page) => {
               const pl = bestPrice(page!.plans);
