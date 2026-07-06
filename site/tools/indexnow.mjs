@@ -39,9 +39,22 @@ if (BING_KEY) {
   };
   const feed = await call('SubmitFeed', { siteUrl: HOST, feedUrl: `${HOST}/sitemap.xml` });
   console.log(`Bing SubmitFeed: HTTP ${feed.status}`);
-  const batch = urls.slice(0, 90); // leave headroom under the ~99-100/day quota
-  const sub = await call('SubmitUrlBatch', { siteUrl: HOST, urlList: batch });
-  console.log(`Bing SubmitUrlBatch: ${batch.length} URLs → HTTP ${sub.status}`);
+
+  // Quota-aware: the daily URL-submission quota is per-site and resets daily. Check
+  // remaining quota first — submitting more than what's left is a hard 400, not a soft cap.
+  let quotaRes;
+  try {
+    const q = await fetch(`https://ssl.bing.com/webmaster/api.svc/json/GetUrlSubmissionQuota?apikey=${BING_KEY}&siteUrl=${encodeURIComponent(HOST)}`);
+    quotaRes = (await q.json()).d?.DailyQuota ?? 0;
+  } catch { quotaRes = 0; }
+  const room = Math.max(0, quotaRes - 5); // keep 5 in reserve for manual "Request indexing" clicks
+  if (room > 0) {
+    const batch = urls.slice(0, room);
+    const sub = await call('SubmitUrlBatch', { siteUrl: HOST, urlList: batch });
+    console.log(`Bing SubmitUrlBatch: ${batch.length}/${urls.length} URLs (quota ${quotaRes}) → HTTP ${sub.status}`);
+  } else {
+    console.log(`Bing SubmitUrlBatch: skipped — daily quota exhausted (${quotaRes} remaining); sitemap feed still notified`);
+  }
 } else {
   console.log('Bing Webmaster: skipped (no BING_WEBMASTER_API_KEY)');
 }
