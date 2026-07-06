@@ -8,6 +8,7 @@ import { normalise, diffSnapshots } from './diff/diff.js';
 import { aiText } from './ai/client.js';
 import { newsjackDraft } from './ai/prompts.js';
 import { tgSend, notifyFlagged, notifyDraft, dailyStatus } from './ops/telegram.js';
+import { sendChangeAlerts } from './alerts/send.js';
 
 const NEWSJACK_THRESHOLD = Number(process.env.NEWSJACK_THRESHOLD || 80);
 const HEALTHCHECK_URL = process.env.HEALTHCHECK_URL;
@@ -31,6 +32,8 @@ async function processVendor(vendor) {
     if (changes.length) {
       stats.changed += changes.length;
       await saveEvents(vendor.id, changes);
+      // email watchers of this vendor (and whole-stack watchers)
+      try { stats.alerted = (stats.alerted || 0) + await sendChangeAlerts(vendor, changes); } catch (e) { console.warn(`[alert] ${vendor.slug}: ${e.message}`); }
       // Draft newsjack for the biggest change if it clears the bar
       const top = changes.reduce((a, b) => (a.significance >= b.significance ? a : b));
       if (top.significance >= NEWSJACK_THRESHOLD) {

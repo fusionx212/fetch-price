@@ -1,22 +1,54 @@
 ---
-// Inline single-field pill (input + button fused). Never a modal, never on entry.
-// Copy names the vendor. Posts to the Sprint-3 watchlist endpoint; until that exists
-// it degrades to a mailto so the capture still works.
+// Inline single-field capture (input + button). Never a modal, never on entry.
+// Posts DIRECTLY to Supabase (anon key, insert-only RLS) — no serverless function,
+// site stays fully static. Low-friction: email only, no account needed.
 interface Props { vendorName?: string; slug?: string; }
 const { vendorName, slug } = Astro.props;
 const label = vendorName
-  ? `Email me when ${vendorName} changes price or packaging`
-  : 'Email me when anything in my stack changes price';
+  ? `Email me when ${vendorName} changes price or drops a deal`
+  : 'Email me when anything in my stack changes price or drops a deal';
+const SUPA_URL = import.meta.env.PUBLIC_SUPABASE_URL || '';
+const SUPA_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
 ---
-<form class="alert" id="watch" action="/api/watch" method="post" data-slug={slug ?? ''}>
-  <label class="alert-label" for="alert-email">{label}</label>
+<form class="alert" data-watch data-slug={slug ?? ''} data-su={SUPA_URL} data-sk={SUPA_KEY}>
+  <label class="alert-label" for={`alert-email-${slug ?? 'all'}`}>{label}</label>
   <div class="alert-pill">
-    <input id="alert-email" name="email" type="email" required placeholder="you@company.co.uk" autocomplete="email" />
-    <input type="hidden" name="vendor" value={slug ?? ''} />
+    <input id={`alert-email-${slug ?? 'all'}`} name="email" type="email" required placeholder="you@company.co.uk" autocomplete="email" />
     <button type="submit" class="btn btn-primary">Watch it</button>
   </div>
-  <p class="alert-note">Free. One email when it changes — not a newsletter. Unsubscribe in one click.</p>
+  <p class="alert-note" data-note>Free. One email when it changes — not a newsletter. Unsubscribe in one click.</p>
 </form>
+<script>
+  document.querySelectorAll('form[data-watch]').forEach((form) => {
+    const f = form as HTMLFormElement;
+    const note = f.querySelector('[data-note]') as HTMLElement;
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = (f.querySelector('input[name=email]') as HTMLInputElement).value.trim();
+      const slug = f.dataset.slug || null;
+      const url = f.dataset.su, key = f.dataset.sk;
+      const btn = f.querySelector('button') as HTMLButtonElement;
+      if (!email) return;
+      if (!url || !key) { note.textContent = 'Signups are being switched on — try again shortly.'; return; }
+      btn.disabled = true; btn.textContent = '…';
+      try {
+        const res = await fetch(`${url}/rest/v1/fp_watches`, {
+          method: 'POST',
+          headers: { 'apikey': key, 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=ignore-duplicates' },
+          body: JSON.stringify({ email, vendor_slug: slug, source: 'site' }),
+        });
+        if (res.ok || res.status === 409) {
+          f.querySelector('.alert-pill')?.remove();
+          note.textContent = "You're on the list. We'll email you the moment it moves.";
+          note.style.color = 'var(--color-drop)';
+        } else { throw new Error(String(res.status)); }
+      } catch {
+        btn.disabled = false; btn.textContent = 'Watch it';
+        note.textContent = "Something went wrong — try again in a sec.";
+      }
+    });
+  });
+</script>
 <style>
   .alert{background:var(--color-surface); border:1px solid var(--color-hairline); border-radius:14px; padding:24px; box-shadow:var(--shadow-1)}
   .alert-label{display:block; font-family:var(--font-display); font-weight:600; font-size:1.25rem; color:var(--color-ink); margin-bottom:14px; letter-spacing:-.01em}
