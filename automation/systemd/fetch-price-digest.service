@@ -1,0 +1,17 @@
+# /etc/systemd/system/fetch-price-digest.service — CLAW WSL
+[Unit]
+Description=Fetch-Price weekly digest
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/root/fetch-price
+ExecStart=/usr/local/bin/node src/alerts/digest.js
+EnvironmentFile=/root/fetch-price/.env
+TimeoutStartSec=30m
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

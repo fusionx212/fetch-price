@@ -1,0 +1,12 @@
+# /etc/systemd/system/fetch-price-digest.timer — weekly, Sunday 09:00
+# Enable: systemctl daemon-reload && systemctl enable --now fetch-price-digest.timer
+[Unit]
+Description=Fetch-Price weekly digest (Sunday 09:00)
+
+[Timer]
+OnCalendar=Sun *-*-* 09:00:00
+RandomizedDelaySec=600
+Persistent=true
+
+[Install]
+WantedBy=timers.target
