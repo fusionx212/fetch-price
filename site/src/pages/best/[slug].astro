@@ -1,0 +1,175 @@
+---
+// Editorial buying-guide pages: /best/{slug} — "best X for UK small business" buying-intent
+// queries. Structural/qualitative copy lives in lib/buying-guides.ts; every price and every
+// vendor-specific claim on this page is computed here, live, from the same data layer every
+// other page uses (lib/data.ts) — never hardcode a price or vendor ranking.
+import Base from '../../layouts/Base.astro';
+import VendorRow from '../../components/VendorRow.astro';
+import AlertCapture from '../../components/AlertCapture.astro';
+import { getVendors, getVendorPage, bestPrice } from '../../lib/data';
+import { priceLabel, checkedAgo } from '../../lib/format';
+import { breadcrumb, faqSchema } from '../../lib/schema';
+import { BUYING_GUIDES, type BuyingGuide } from '../../lib/buying-guides';
+
+export async function getStaticPaths() {
+  return BUYING_GUIDES.map((g) => ({ params: { slug: g.slug }, props: { guide: g } }));
+}
+
+const { guide } = Astro.props as { guide: BuyingGuide };
+const site = Astro.site?.toString().replace(/\/$/, '') || 'https://fetch-price.com';
+
+// Only vendors that pass the publish gate (isPublishable) ever reach getVendors() — see
+// lib/data.ts. So every row below traces back to a real, gated scrape, not a seed placeholder.
+const vendors = (await getVendors()).filter((v) => v.category === guide.category);
+const pages = (await Promise.all(vendors.map((v) => getVendorPage(v.slug)))).filter(
+  (p): p is NonNullable<typeof p> => p !== null
+);
+
+const rows = pages
+  .map((page) => {
+    const plan = bestPrice(page.plans);
+    return { page, plan, points: plan ? page.history[plan.name] ?? [] : [] };
+  })
+  .sort((a, b) => (a.plan?.price ?? Infinity) - (b.plan?.price ?? Infinity));
+
+// Cheapest genuinely PAID plan in the category — for the editorial callout (free plans are
+// shown in the table but shouldn't be the headline "cheapest paid option" claim).
+const cheapestPaid = pages
+  .flatMap((page) => page.plans.filter((p) => typeof p.price === 'number' && (p.price as number) > 0).map((p) => ({ page, p })))
+  .sort((a, b) => (a.p.price as number) - (b.p.price as number))[0];
+
+// Vendors currently showing a genuine £0 plan on any tier — computed live, never a static list.
+const freeTierVendors = pages.filter((page) => page.plans.some((p) => p.price === 0)).map((page) => page.vendor.name);
+
+const freshest = pages
+  .map((page) => page.lastChecked)
+  .filter((d): d is string => !!d)
+  .sort()
+  .at(-1);
+
+const dataDrivenFaqs = [
+  ...(cheapestPaid
+    ? [{
+        q: `What's the cheapest ${guide.faqNoun} right now?`,
+        a: `As of our last check, the cheapest paid plan we track in this category is ${cheapestPaid.page.vendor.name}'s ${cheapestPaid.p.name} plan at ${priceLabel(cheapestPaid.p)}. This changes as vendors update pricing — see the live table above for the current figure.`,
+      }]
+    : []),
+  {
+    q: `Do any of these tools have a free tier?`,
+    a: freeTierVendors.length
+      ? `Yes — ${freeTierVendors.join(', ')} currently show a £0 plan on their pricing page. Free tiers are usually capped on seats, records, or features, so check the limit against your needs.`
+      : `None of the vendors we currently track in this category publish a £0 plan — all require a paid subscription.`,
+  },
+  ...guide.faqs,
+];
+
+const jsonLd = [
+  faqSchema(dataDrivenFaqs),
+  breadcrumb([
+    { name: 'Buying guides', url: `${site}/best/` },
+    { name: guide.h1, url: `${site}/best/${guide.slug}/` },
+  ]),
+];
+---
+<Base
+  title={`${guide.h1} — Fetch-Price`}
+  description={guide.dek}
+  path={`best/${guide.slug}/`}
+  jsonLd={jsonLd}
+>
+  <article class="wrap guide">
+    <nav class="crumb label"><a href="/best/">Buying guides</a></nav>
+    <p class="label eyebrow">{guide.kicker}</p>
+    <h1 class="display-xl guide-title">{guide.h1}</h1>
+    <p class="body-lg guide-dek">{guide.dek}</p>
+
+    <section class="guide-table">
+      <div class="guide-table-head">
+        <h2 class="headline-md">{rows.length} tools compared on price</h2>
+        {freshest && <span class="fresh"><span class="dot"></span>{checkedAgo(freshest)}</span>}
+      </div>
+      <div class="card guide-list">
+        {rows.map((r, i) => (
+          <VendorRow
+            vendor={r.page.vendor}
+            plan={r.plan}
+            points={r.points}
+            fresh={checkedAgo(r.page.lastChecked)}
+            highlight={i === 0}
+          />
+        ))}
+      </div>
+      <p class="guide-note">Sorted by the cheapest currently-listed plan on each vendor's own pricing page — including free tiers, where one exists. Prices are the vendor's published list price for the exact plan named; always confirm the plan matches your headcount and use case before you buy.</p>
+    </section>
+
+    <section class="guide-intro">
+      {guide.intro.map((p) => <p class="body-lg">{p}</p>)}
+    </section>
+
+    <section class="guide-matters">
+      <h2 class="headline-lg">What actually matters when you choose</h2>
+      <div class="guide-matters-grid">
+        {guide.whatMatters.map((m) => (
+          <div class="card matter">
+            <h3 class="headline-md">{m.title}</h3>
+            <p>{m.body}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="guide-budget">
+      <h2 class="headline-lg">Budget tiers</h2>
+      <ol class="guide-budget-list">
+        {guide.budgetTiers.map((t) => (
+          <li>
+            <span class="label">{t.label}</span>
+            <p>{t.body}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="guide-faq">
+      <h2 class="headline-lg">Questions people ask</h2>
+      <div class="guide-faq-list">
+        {dataDrivenFaqs.map((f) => (
+          <details class="faq-item">
+            <summary class="headline-md">{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <section class="guide-alert">
+      <AlertCapture />
+    </section>
+  </article>
+</Base>
+
+<style>
+  .guide{padding-block:40px 24px; max-width:900px}
+  .crumb{margin-bottom:14px}
+  .crumb a{color:var(--color-ink-3)}
+  .guide-title{margin:10px 0 18px}
+  .guide-dek{color:var(--color-ink-2); margin-bottom:44px}
+  section{margin-bottom:52px}
+  .guide-table-head{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; flex-wrap:wrap}
+  .guide-list{padding:8px 14px}
+  .guide-note{margin-top:14px; color:var(--color-ink-3); font-size:.85rem; max-width:70ch; line-height:1.5}
+  .guide-intro p{color:var(--color-ink-2); margin-bottom:16px}
+  .guide-matters h2, .guide-budget h2, .guide-faq h2{margin-bottom:20px}
+  .guide-matters-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px}
+  .matter{padding:22px}
+  .matter h3{margin-bottom:10px}
+  .matter p{color:var(--color-ink-2); line-height:1.55}
+  .guide-budget-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:20px}
+  .guide-budget-list li{padding:18px 0; border-top:1px solid var(--color-hairline)}
+  .guide-budget-list p{margin-top:8px; color:var(--color-ink-2); line-height:1.55; max-width:65ch}
+  .guide-faq-list{display:flex; flex-direction:column; gap:2px}
+  .faq-item{padding:18px 0; border-top:1px solid var(--color-hairline)}
+  .faq-item summary{cursor:pointer; list-style:none}
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item p{margin-top:10px; color:var(--color-ink-2); line-height:1.55}
+</style>

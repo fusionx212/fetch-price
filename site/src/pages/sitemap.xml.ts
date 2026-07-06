@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getVendors } from '../lib/data';
+import { BUYING_GUIDES } from '../lib/buying-guides';
 
 export const GET: APIRoute = async ({ site }) => {
   const base = (site?.toString() || 'https://fetch-price.com').replace(/\/$/, '');
@@ -9,6 +10,8 @@ export const GET: APIRoute = async ({ site }) => {
     { u: '', p: '1.0' },
     { u: 'pricing-history/', p: '0.9' },
     { u: 'alerts/', p: '0.8' },
+    { u: 'best/', p: '0.9' },
+    ...BUYING_GUIDES.map((g) => ({ u: `best/${g.slug}/`, p: '0.85' })),
     ...vendors.flatMap((v) => [
       { u: `pricing-history/${v.slug}/`, p: '0.8' },
       { u: `has-${v.slug}-raised-prices/`, p: '0.6' },

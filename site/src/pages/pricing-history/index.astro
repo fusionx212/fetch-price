@@ -3,6 +3,7 @@ import Base from '../../layouts/Base.astro';
 import VendorRow from '../../components/VendorRow.astro';
 import { getVendors, getVendorPage, bestPrice, computeStats } from '../../lib/data';
 import { checkedAgo } from '../../lib/format';
+import { guideForCategory } from '../../lib/buying-guides';
 
 const vendors = await getVendors();
 const stats = await computeStats();
@@ -25,21 +26,25 @@ const cats = [...new Set(vendors.map((v) => v.category))];
       <p class="body-lg idx-sub">{stats.vendorCount} vendors tracked across {stats.categoryCount} categories, checked regularly. Pick a vendor for its full dated history and change log.</p>
     </header>
 
-    {cats.map((cat) => (
-      <section class="idx-cat">
-        <h2 class="headline-md idx-cat-head" style={`--category-accent:${cat === 'broadband' ? '#33556e' : cat === 'telecoms' ? '#3f3f46' : 'var(--color-accent)'}`}>{cat}</h2>
-        <div class="idx-list card">
-          {rows.filter((r) => r.page.vendor.category === cat).map((r) => (
-            <VendorRow
-              vendor={r.page.vendor}
-              plan={r.plan}
-              points={r.points}
-              fresh={checkedAgo(r.page.lastChecked)}
-            />
-          ))}
-        </div>
-      </section>
-    ))}
+    {cats.map((cat) => {
+      const guide = guideForCategory(cat);
+      return (
+        <section class="idx-cat">
+          <h2 class="headline-md idx-cat-head" style={`--category-accent:${cat === 'broadband' ? '#33556e' : cat === 'telecoms' ? '#3f3f46' : 'var(--color-accent)'}`}>{cat}</h2>
+          <div class="idx-list card">
+            {rows.filter((r) => r.page.vendor.category === cat).map((r) => (
+              <VendorRow
+                vendor={r.page.vendor}
+                plan={r.plan}
+                points={r.points}
+                fresh={checkedAgo(r.page.lastChecked)}
+              />
+            ))}
+          </div>
+          {guide && <a href={`/best/${guide.slug}/`} class="idx-guide-link">Read the {guide.kicker} buying guide →</a>}
+        </section>
+      );
+    })}
   </section>
 </Base>
 
@@ -51,4 +56,5 @@ const cats = [...new Set(vendors.map((v) => v.category))];
   .idx-cat{margin-bottom:40px}
   .idx-cat-head{text-transform:capitalize; padding-left:12px; border-left:3px solid var(--category-accent); margin-bottom:16px}
   .idx-list{padding:8px 14px}
+  .idx-guide-link{display:inline-block; margin-top:12px; color:var(--color-accent); font-weight:600; font-size:.9rem}
 </style>

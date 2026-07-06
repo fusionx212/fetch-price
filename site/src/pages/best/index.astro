@@ -1,0 +1,52 @@
+---
+// Hub page for the editorial buying guides — /best/. Mirrors the pattern of
+// pricing-history/index.astro (one index page above a set of detail pages) so the
+// guides are discoverable in nav and by crawlers, not orphaned pages only in the sitemap.
+import Base from '../../layouts/Base.astro';
+import { getVendors } from '../../lib/data';
+import { BUYING_GUIDES } from '../../lib/buying-guides';
+
+const vendors = await getVendors();
+const cards = BUYING_GUIDES.map((g) => ({
+  guide: g,
+  count: vendors.filter((v) => v.category === g.category).length,
+}));
+---
+<Base
+  title="Buying guides — best business software for UK SMEs, by real tracked price | Fetch-Price"
+  description="Editorial buying guides for the software categories we track: what to look for, budget tiers, and every vendor compared on the price we've most recently confirmed."
+  path="best/"
+>
+  <section class="wrap idx">
+    <header class="idx-head">
+      <p class="label eyebrow">Buying guides</p>
+      <h1 class="display-xl idx-title">How to choose — and what it actually costs.</h1>
+      <p class="body-lg idx-sub">Category-by-category buying advice, backed by the same live pricing data as the rest of the site. No vendor pays to be ranked higher.</p>
+    </header>
+
+    <div class="idx-grid">
+      {cards.map(({ guide, count }) => (
+        <a href={`/best/${guide.slug}/`} class="card idx-card">
+          <p class="label idx-kicker">{guide.kicker}</p>
+          <h2 class="headline-md">{guide.h1}</h2>
+          <p class="idx-dek">{guide.dek}</p>
+          <span class="idx-count">{count} tools compared →</span>
+        </a>
+      ))}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .idx{padding-block:48px 24px}
+  .idx-head{max-width:70ch; margin-bottom:48px}
+  .idx-title{margin:14px 0}
+  .idx-sub{color:var(--color-ink-2)}
+  .idx-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px}
+  .idx-card{display:block; padding:24px}
+  .idx-card:hover{box-shadow:var(--shadow-2)}
+  .idx-kicker{margin-bottom:10px}
+  .idx-card h2{margin-bottom:10px}
+  .idx-dek{color:var(--color-ink-2); line-height:1.5; margin-bottom:18px}
+  .idx-count{color:var(--color-accent); font-weight:600; font-size:.9rem}
+</style>
