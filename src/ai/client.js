@@ -9,10 +9,13 @@ const KEY = process.env.LITELLM_API_KEY || process.env.LITELLM_MASTER_KEY || '';
 
 // Cascades are env-overridable (comma-separated LiteLLM model_names). Defaults are
 // free-local-first, then the two cheap cloud lanes Dale named.
+// Extraction + diff drive the user-facing prices, so they use the accurate big models
+// (Qwen3-235B-A22B → DeepSeek) — the free local models mis-read complex pricing pages.
+// Vision stays free-local. Cheapest-first within each cascade.
 const CASCADE = {
-  extract: (process.env.FP_MODELS_EXTRACT || 'local-worker-large,local-worker,qwen3-flash-thinking,deepseek-flash').split(','),
-  diff:    (process.env.FP_MODELS_DIFF    || 'local-worker-large,qwen3-flash-thinking,deepseek-flash').split(','),
-  draft:   (process.env.FP_MODELS_DRAFT   || 'local-worker-large,qwen3-flash-thinking,deepseek-flash').split(','),
+  extract: (process.env.FP_MODELS_EXTRACT || 'qwen3-flash,deepseek-flash').split(','),
+  diff:    (process.env.FP_MODELS_DIFF    || 'qwen3-flash,deepseek-flash').split(','),
+  draft:   (process.env.FP_MODELS_DRAFT   || 'qwen3-flash,deepseek-flash').split(','),
   vision:  (process.env.FP_MODELS_VISION  || 'local-vision,fusion-vision').split(','),
 };
 const pick = (task) => (CASCADE[task] || CASCADE.extract).map((m) => m.trim()).filter(Boolean);
