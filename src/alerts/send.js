@@ -10,7 +10,7 @@ async function resendSend(to, subject, html) {
   if (!RESEND_KEY) return false;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 fetch-price-farm' },
     body: JSON.stringify({ from: FROM, to, subject, html }),
   });
   if (!res.ok) console.warn(`[alert] resend ${res.status}: ${(await res.text()).slice(0, 120)}`);
