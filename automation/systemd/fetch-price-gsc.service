@@ -1,0 +1,16 @@
+# /etc/systemd/system/fetch-price-gsc.service — CLAW WSL
+[Unit]
+Description=Fetch-Price weekly Search Console report
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/root/fetch-price
+ExecStart=/usr/local/bin/node src/ops/gsc-report.js
+EnvironmentFile=/root/fetch-price/.env
+TimeoutStartSec=10m
+
+[Install]
+WantedBy=multi-user.target
