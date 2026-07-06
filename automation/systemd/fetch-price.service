@@ -1,15 +1,18 @@
-# /etc/systemd/system/fetch-price.service
+# /etc/systemd/system/fetch-price.service — CLAW WSL (Ubuntu-26.04, root)
+# Farm home: /root/fetch-price. Inference via LiteLLM on localhost:4000 (free local
+# GPU first). Install: copy this + the .timer to /etc/systemd/system/, then
+#   systemctl daemon-reload && systemctl enable --now fetch-price.timer
 [Unit]
-Description=Fetch-Price nightly scrape run
-After=network-online.target ollama.service
+Description=Fetch-Price daily scrape run
+After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=oneshot
-User=dalec
-WorkingDirectory=/home/dalec/websites/fetch-price
-ExecStart=/usr/bin/node src/index.js
-EnvironmentFile=/home/dalec/websites/fetch-price/.env
+User=root
+WorkingDirectory=/root/fetch-price
+ExecStart=/usr/local/bin/node src/index.js
+EnvironmentFile=/root/fetch-price/.env
 TimeoutStartSec=3h
 Nice=10
 
