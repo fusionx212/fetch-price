@@ -2,7 +2,20 @@
 
 export const EXTRACT_SCHEMA_HINT = `Return JSON exactly in this shape:
 {"plans":[{"name":"","price":0,"currency":"GBP","period":"month|year|usage","unit":"per seat|flat|per GB|...","features":["..."],"notes":""}]}
-Use null for unknown price ("contact sales" plans). No other keys.`;
+Use null for unknown price ("contact sales" plans). No other keys.
+
+PRICING RULES — get the STANDARD price, not a deal:
+- Capture the STANDARD / regular / ongoing list price per plan. IGNORE promotional,
+  introductory, "first N months", "was/now", limited-time, "save X%", trial, or
+  discounted prices. If both a promo and a standard price show, use the STANDARD
+  (the ongoing price after any intro period).
+- If the page defaults to an ANNUAL/"billed yearly" price but also shows a monthly
+  price, prefer the MONTHLY list price and set period="month". If only annual is shown,
+  use it and set period="year". Never divide or compute a price yourself — read the
+  stated figure.
+- price is the number only (no currency symbol). Set currency from the symbol shown
+  (£=GBP, $=USD, €=EUR); default GBP. unit = "per seat"/"per user"→"per seat", per line,
+  per GB, else "flat".`;
 
 export const extractFromText = (pageText) => `You are extracting SaaS pricing plans from a pricing page's text content.
 ${EXTRACT_SCHEMA_HINT}
