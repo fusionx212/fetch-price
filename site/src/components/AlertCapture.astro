@@ -34,7 +34,7 @@ const SUPA_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
       try {
         const res = await fetch(`${url}/rest/v1/fp_watches`, {
           method: 'POST',
-          headers: { 'apikey': key, 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=ignore-duplicates' },
+          headers: { 'apikey': key, 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           body: JSON.stringify({ email, vendor_slug: slug, source: 'site' }),
         });
         if (res.ok || res.status === 409) {
