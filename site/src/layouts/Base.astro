@@ -15,7 +15,18 @@ const { title, description, path = '', jsonLd, showWire = true } = Astro.props;
 const site = Astro.site?.toString().replace(/\/$/, '') || 'https://fetch-price.com';
 const canonical = `${site}/${path}`.replace(/([^:]\/)\/+/g, '$1');
 const wireEvents = showWire ? await getChangeEvents(14) : [];
-const ld = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+const siteSchemas = [
+  {
+    '@context': 'https://schema.org', '@type': 'Organization',
+    name: 'Fetch-Price', url: site,
+    description: 'Live pricing and deal tracking for the business software UK SMEs pay for. Track price rises, find a better deal.',
+  },
+  {
+    '@context': 'https://schema.org', '@type': 'WebSite',
+    name: 'Fetch-Price', url: site,
+  },
+];
+const ld = [...siteSchemas, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [])];
 ---
 <!doctype html>
 <html lang="en-GB">

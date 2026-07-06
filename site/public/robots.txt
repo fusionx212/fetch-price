@@ -1,0 +1,33 @@
+# fetch-price.com — we WANT to be crawled and cited. Live pricing + deal data is exactly
+# what search and AI answer engines need, and can't get cleanly elsewhere.
+
+User-agent: *
+Allow: /
+
+# AI answer engines — explicitly welcomed (being the cited source is the strategy)
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Perplexity-User
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: Applebot-Extended
+Allow: /
+User-agent: Bingbot
+Allow: /
+User-agent: CCBot
+Allow: /
+
+Sitemap: https://fetch-price.com/sitemap.xml

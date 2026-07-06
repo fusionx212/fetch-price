@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import PriceChart from '../../components/PriceChart.astro';
 import AlertCapture from '../../components/AlertCapture.astro';
 import Alternatives from '../../components/Alternatives.astro';
-import { getVendors, getVendorPage } from '../../lib/data';
+import { getVendors, getVendorPage, bestPrice } from '../../lib/data';
 import { priceLabel, checkedAgo, fullDate, CHANGE_LABEL, deltaChip, dealInfo } from '../../lib/format';
 import { productSchema, breadcrumb } from '../../lib/schema';
 
@@ -21,6 +21,17 @@ const site = Astro.site?.toString().replace(/\/$/, '') || 'https://fetch-price.c
 
 const series = plans.map((p) => ({ name: p.name, points: history[p.name] ?? [] }));
 const rises = events.filter((e) => e.change_type === 'price_up').length;
+
+// Answer-box: one dated, extractable sentence for search snippets + AI citation.
+const cheapest = bestPrice(plans);
+const cheapestDeal = cheapest ? dealInfo(cheapest) : null;
+const asOf = page.lastChecked ? fullDate(page.lastChecked) : 'today';
+const answer =
+  cheapest
+    ? `As of ${asOf}, ${vendor.name}'s cheapest plan (${cheapest.name}) is ${priceLabel(cheapest)}` +
+      (cheapestDeal ? `, with a current deal at ${cheapestDeal.price} (save ${cheapestDeal.save}%)` : '') +
+      `. ${rises ? `${rises} price rise${rises === 1 ? '' : 's'} recorded.` : 'No price rises recorded yet.'}`
+    : `${vendor.name} pricing is quote-based. We track any published changes.`;
 const catAccent = vendor.category === 'broadband' ? '#33556e' : vendor.category === 'telecoms' ? '#3f3f46' : 'var(--color-accent)';
 
 const jsonLd = [
@@ -52,6 +63,9 @@ const jsonLd = [
         <a href={`/has-${vendor.slug}-raised-prices/`} class="verdict-link">Has {vendor.name} raised prices? →</a>
       </div>
     </header>
+
+    <!-- answer box: dated, extractable summary for search + AI citation -->
+    <p class="answer-box">{answer}</p>
 
     <!-- current plans -->
     <section class="plans">
@@ -116,6 +130,7 @@ const jsonLd = [
 
 <style>
   .vpage{padding-block:40px 24px}
+  .answer-box{font-size:1.05rem; line-height:1.55; color:var(--color-ink); background:var(--color-surface-high); border:1px solid var(--color-hairline); border-left:3px solid var(--color-accent); border-radius:8px; padding:16px 20px; margin-bottom:36px; max-width:78ch}
   .crumb{margin-bottom:20px}
   .crumb a{color:var(--color-ink-3)}
   .crumb a:hover{color:var(--color-accent)}
