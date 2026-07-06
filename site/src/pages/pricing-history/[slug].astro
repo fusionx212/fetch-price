@@ -23,7 +23,11 @@ const series = plans.map((p) => ({ name: p.name, points: history[p.name] ?? [] }
 const rises = events.filter((e) => e.change_type === 'price_up').length;
 
 // Answer-box: one dated, extractable sentence for search snippets + AI citation.
-const cheapest = bestPrice(plans);
+// Prefer the cheapest PAID plan as the "from" price (a "from £0/Free" hook is weak).
+const paidPlans = plans.filter((p) => typeof p.price === 'number' && (p.price as number) > 0);
+const cheapest = paidPlans.length
+  ? paidPlans.reduce((a, b) => ((a.price as number) <= (b.price as number) ? a : b))
+  : bestPrice(plans);
 const cheapestDeal = cheapest ? dealInfo(cheapest) : null;
 const asOf = page.lastChecked ? fullDate(page.lastChecked) : 'today';
 const answer =

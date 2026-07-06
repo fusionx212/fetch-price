@@ -2,10 +2,11 @@ import type { Plan, PricePoint, ChangeType } from './types';
 
 const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
+const SYMBOL: Record<string, string> = { GBP: '£', USD: '$', EUR: '€' };
 export function money(price: number | null, currency = 'GBP'): string {
   if (price == null) return 'POA';
-  if (currency !== 'GBP') return `${price}`;
-  return gbp.format(price);
+  if (currency === 'GBP') return gbp.format(price);
+  return `${SYMBOL[currency] ?? ''}${price}`;
 }
 
 /** "£8.75/seat" | "£47/mo" | "£792/mo flat" | "POA" */
