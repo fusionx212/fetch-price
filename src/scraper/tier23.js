@@ -4,22 +4,76 @@
 import { aiJson, aiVisionJson } from '../ai/client.js';
 import { extractFromText, extractFromScreenshot, healSelectors } from '../ai/prompts.js';
 
-const validPlans = (out) =>
-  out && Array.isArray(out.plans) && out.plans.length > 0 &&
-  out.plans.every((p) => typeof p.name === 'string');
+// Confidence gate — reject broken/over-captured extractions so garbage never publishes.
+export function sanePlans(plans) {
+  if (!Array.isArray(plans) || plans.length === 0 || plans.length > 8) return false;
+  if (!plans.every((p) => p && typeof p.name === 'string' && p.name.trim())) return false;
+  const priced = plans.filter((p) => typeof p.price === 'number');
+  if (priced.length < 1) return false;                                   // no real prices
+  if (priced.some((p) => p.price < 0 || p.price > 20000)) return false;  // implausible
+  const names = plans.map((p) => p.name.toLowerCase().trim());
+  if (new Set(names).size !== names.length) return false;               // duplicate tiers
+  return true;
+}
+
+const validPlans = (out) => out && sanePlans(out.plans);
+
+// Best-effort: dismiss cookie/consent banners so they don't obscure pricing or block text.
+async function dismissBanners(page) {
+  const sel = [
+    '#onetrust-accept-btn-handler', '#truste-consent-button', '.cookie-accept',
+    '[aria-label*="accept" i]', '[data-testid*="accept" i]', 'button[id*="accept" i]',
+  ];
+  for (const s of sel) {
+    try { const el = page.locator(s).first(); if (await el.isVisible({ timeout: 500 })) { await el.click({ timeout: 1000 }); return; } } catch {}
+  }
+  for (const t of ['Accept all', 'Accept All', 'Accept cookies', 'I agree', 'Allow all', 'Got it', 'Accept']) {
+    try { const el = page.getByRole('button', { name: t, exact: false }).first(); if (await el.isVisible({ timeout: 400 })) { await el.click({ timeout: 1000 }); return; } } catch {}
+  }
+}
+
+// Best-effort: switch billing toggle to MONTHLY so we read a consistent monthly list price
+// (many pages default to annual). We keep both list + deal, so annual becomes a deal_note.
+async function selectMonthly(page) {
+  for (const t of ['Monthly', 'Pay monthly', 'Bill monthly', 'Billed monthly', 'Month']) {
+    try {
+      const el = page.getByText(new RegExp(`^\\s*${t}\\s*$`, 'i')).first();
+      if (await el.isVisible({ timeout: 400 })) { await el.click({ timeout: 1000 }); await page.waitForTimeout(800); return; }
+    } catch {}
+  }
+}
+
+async function autoScroll(page) {
+  try {
+    await page.evaluate(async () => {
+      await new Promise((res) => {
+        let y = 0; const step = 600;
+        const t = setInterval(() => { window.scrollBy(0, step); y += step; if (y >= document.body.scrollHeight) { clearInterval(t); res(); } }, 120);
+      });
+    });
+    await page.evaluate(() => window.scrollTo(0, 0));
+  } catch {}
+}
 
 export async function tier2(vendor) {
   const { chromium } = await import('playwright'); // lazy — only loads when needed
   const browser = await chromium.launch({ headless: true });
   try {
-    const page = await browser.newPage({
+    const context = await browser.newContext({
       userAgent: 'FetchPriceBot/1.0 (+https://fetch-price.com/bot)',
-      viewport: { width: 1400, height: 2400 }
+      viewport: { width: 1400, height: 2400 },
+      locale: 'en-GB',
+      extraHTTPHeaders: { 'Accept-Language': 'en-GB,en;q=0.9' },
     });
+    const page = await context.newPage();
     // domcontentloaded (not networkidle): many pricing pages keep long-poll/analytics
     // connections open and never reach idle, so networkidle just times out (e.g. Xero).
     await page.goto(vendor.pricing_url, { waitUntil: 'domcontentloaded', timeout: 45000 });
-    await page.waitForTimeout(2500); // let pricing toggles / lazy content settle
+    await page.waitForTimeout(1500);
+    await dismissBanners(page);
+    await selectMonthly(page);
+    await autoScroll(page);          // trigger lazy-loaded pricing cards
+    await page.waitForTimeout(1500); // let toggles / lazy content settle
     const html = await page.content();
     const text = await page.evaluate(() => document.body.innerText);
     const screenshot = (await page.screenshot({ fullPage: true, type: 'png' })).toString('base64');

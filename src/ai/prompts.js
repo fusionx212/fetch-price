@@ -18,7 +18,13 @@ PRICING RULES — capture BOTH the standard price AND any current deal:
   If only annual is shown, use it and set period="year". Never compute a price yourself
   beyond reading stated figures.
 - Prices are numbers only (no symbol). currency from the symbol (£=GBP, $=USD, €=EUR;
-  default GBP). unit: "per seat"/"per user"→"per seat", per line, per GB, else "flat".`;
+  default GBP). unit: "per seat"/"per user"→"per seat", per line, per GB, else "flat".
+- Return EXACTLY ONE object per distinct plan/tier (e.g. Basic, Standard, Pro, Enterprise).
+  NEVER repeat a plan name. If one tier shows several prices (monthly vs annual, or different
+  seat-count columns), pick the standard MONTHLY per-seat list price as "price"; if a lower
+  promo/annual price is also shown, put that in "deal_price". Ignore seat-quantity variations.
+- Only include real purchasable plans. Do NOT invent plans from section headings, add-ons,
+  feature names, or marketing labels (an "AEO"/"AI" section heading is not a plan).`;
 
 export const extractFromText = (pageText) => `You are extracting SaaS pricing plans from a pricing page's text content.
 ${EXTRACT_SCHEMA_HINT}

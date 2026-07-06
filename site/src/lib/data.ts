@@ -7,6 +7,17 @@ import type { Vendor, ChangeEvent, PricePoint, Plan, Snapshot } from './types';
 
 export const dataMode: 'live' | 'demo' = isLive ? 'live' : 'demo';
 
+/** Publish gate (mirrors the farm's sanePlans): only trustworthy extractions go live. */
+export function isPublishable(plans: Plan[]): boolean {
+  if (!plans || plans.length === 0 || plans.length > 8) return false;
+  if (!plans.every((p) => p && typeof p.name === 'string' && p.name.trim())) return false;
+  const priced = plans.filter((p) => p.price != null);
+  if (priced.length < 1) return false;
+  if (priced.some((p) => (p.price as number) < 0 || (p.price as number) > 20000)) return false;
+  const names = plans.map((p) => p.name.toLowerCase().trim());
+  return new Set(names).size === names.length;
+}
+
 export interface VendorPage {
   vendor: Vendor;
   plans: Plan[];                          // latest snapshot's plans
@@ -53,7 +64,19 @@ function historyFromSnapshots(snaps: Snapshot[]): Record<string, PricePoint[]> {
 
 // ── public API ────────────────────────────────────────────────────────────
 export async function getVendors(): Promise<Vendor[]> {
-  if (isLive) return liveVendors();
+  if (isLive) {
+    const vendors = await liveVendors();
+    // keep only vendors whose latest snapshot passes the publish gate
+    const { data: snaps } = await supabase!
+      .from('fp_snapshots').select('vendor_id, captured_at, extracted')
+      .order('captured_at', { ascending: false }).limit(3000);
+    const latest = new Map<string, Plan[]>();
+    for (const s of (snaps as Snapshot[] & { vendor_id: string }[] ?? [])) {
+      const vid = (s as any).vendor_id;
+      if (!latest.has(vid)) latest.set(vid, s.extracted?.plans ?? []);
+    }
+    return vendors.filter((v) => isPublishable(latest.get(v.id) ?? []));
+  }
   return DEMO_VENDORS.map(({ plans, history, events, ...v }) => v);
 }
 
@@ -63,6 +86,7 @@ export async function getVendorPage(slug: string): Promise<VendorPage | null> {
     if (!v) return null;
     const snaps = await liveSnapshots(v.id);
     const latest = snaps[snaps.length - 1];
+    if (!isPublishable(latest?.extracted?.plans ?? [])) return null; // don't render un-gated data
     const { data: evs } = await supabase!
       .from('fp_change_events').select('*').eq('vendor_id', v.id).order('detected_at', { ascending: false });
     return {
