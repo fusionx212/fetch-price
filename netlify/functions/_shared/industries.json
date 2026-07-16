@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "regions": {
+    "west-midlands": {
+      "label": "West Midlands",
+      "postcode_prefixes": ["B", "CV", "DY", "WS", "WV"],
+      "counties": ["West Midlands", "Warwickshire", "Worcestershire", "Staffordshire", "Shropshire"]
+    }
+  },
+  "industries": [
+    {
+      "slug": "construction",
+      "label": "Construction & Building",
+      "sic_codes": ["41201", "41202", "42110", "42120", "42210", "42220", "42910", "42990", "43110", "43120", "43210", "43220", "43290", "43310", "43320", "43330", "43341", "43342", "43390", "43910", "43991", "43999"],
+      "stats_rationale": "Construction GVA ~£178bn (ONS 2024); ~2.2m UK jobs. Highest insolvency volume among trades — ideal for birth monitoring and death liquidation comps.",
+      "asset_categories": ["excavators", "scaffold-towers", "cement-mixers", "power-tools", "van-fleet"],
+      "revenue_pillar": ["predator", "monitor", "vulture"],
+      "seo_templates": {
+        "vanity": "{count} new {industry} firms in {region} this week | Regional Commerce Data",
+        "greed": "Liquidation comps: {industry} kit prices in {region} | Fetch Price",
+        "fear": "Insolvency risk: {industry} in {region} ({count} signals) | Regional Commerce Data"
+      }
+    },
+    {
+      "slug": "plumbing-heating",
+      "label": "Plumbing & Heating",
+      "sic_codes": ["43220", "43290", "35300"],
+      "stats_rationale": "~130k plumbing/heating businesses (Federation of Master Builders sector data). Gas Safe registration churn creates steady birth/death signal.",
+      "asset_categories": ["boiler-stock", "pipe-threaders", "van-tools", "copper-stock", "power-tools"],
+      "revenue_pillar": ["predator", "monitor", "vulture"],
+      "seo_templates": {
+        "vanity": "New {industry} companies registered in {region} | Regional Commerce Data",
+        "greed": "Liquidation comps: van + tool package for {industry} in {region} | Fetch Price",
+        "fear": "Insolvency risk: {industry} in {region} | Regional Commerce Data"
+      }
+    },
+    {
+      "slug": "electrical",
+      "label": "Electrical Installation",
+      "sic_codes": ["43210", "33140", "27110", "27120"],
+      "stats_rationale": "Net-zero and EV-charge rollout (DESNZ) driving electrical contractor growth; NICEIC/ECS registrations correlate with CH incorporations.",
+      "asset_categories": ["test-equipment", "cable-drums", "ev-charge-units", "van-tools", "scaffold-access"],
+      "revenue_pillar": ["predator", "monitor", "vulture"],
+      "seo_templates": {
+        "vanity": "{count} new electrical contractors in {region} | Regional Commerce Data",
+        "greed": "Liquidation comps: electrical kit in {region} | Fetch Price",
+        "fear": "Insolvency risk: electrical contractors in {region} | Regional Commerce Data"
+      }
+    },
+    {
+      "slug": "haulage",
+      "label": "Haulage & Road Freight",
+      "sic_codes": ["49410", "49420", "52219", "52241", "52290"],
+      "stats_rationale": "Road freight moved 1.4bn tonnes domestically (DfT 2023); HGV operator licence churn and fuel-margin stress drive insolvency spikes.",
+      "asset_categories": ["hgv-vehicles", "trailers", "pallet-trucks", "warehouse-racking", "fuel-cards"],
+      "revenue_pillar": ["monitor", "vulture"],
+      "seo_templates": {
+        "vanity": "New haulage operators in {region} | Regional Commerce Data",
+        "greed": "Liquidation comps: haulage fleet assets in {region} | Fetch Price",
+        "fear": "Insolvency risk: haulage in {region} ({count} signals) | Regional Commerce Data"
+      }
+    },
+    {
+      "slug": "motor-trade",
+      "label": "Motor Trade & Repair",
+      "sic_codes": ["45111", "45112", "45190", "45200", "45310", "45320", "45400"],
+      "stats_rationale": "SMMT: ~4,500 franchised + ~35k independent repairers; high tangible asset density — strongest Fetch-Price liquidation lane (AutoTrader/eBay comps).",
+      "asset_categories": ["workshop-lifts", "diagnostic-tools", "parts-stock", "vehicle-stock", "tyre-equipment"],
+      "revenue_pillar": ["predator", "monitor", "vulture"],
+      "seo_templates": {
+        "vanity": "{count} new motor trade firms in {region} | Regional Commerce Data",
+        "greed": "Liquidation comps: workshop equipment in {region} | Fetch Price",
+        "fear": "Insolvency risk: motor trade in {region} | Regional Commerce Data"
+      }
+    }
+  ],
+  "gazette_notice_types": [
+    { "code": "G205000000", "label": "Winding Up Petition", "lifecycle": "death" },
+    { "code": "G205010000", "label": "Winding Up Order", "lifecycle": "death" },
+    { "code": "G205020000", "label": "Appointment of Liquidator", "lifecycle": "death" },
+    { "code": "G205030000", "label": "Creditors Voluntary Liquidation", "lifecycle": "death" },
+    { "code": "G205040000", "label": "Members Voluntary Liquidation", "lifecycle": "death" },
+    { "code": "G205050000", "label": "Administration Order", "lifecycle": "death" },
+    { "code": "G205060000", "label": "Appointment of Administrator", "lifecycle": "death" },
+    { "code": "G205070000", "label": "Receiver Appointment", "lifecycle": "death" }
+  ],
+  "lead_quality_rules": {
+    "gold": {
+      "min_score": 80,
+      "signals": ["sic_match", "region_match", "incorporated_within_7d", "active_status", "has_registered_address"]
+    },
+    "silver": {
+      "min_score": 55,
+      "signals": ["sic_match", "region_match", "incorporated_within_30d"]
+    },
+    "bronze": {
+      "min_score": 30,
+      "signals": ["sic_match"]
+    }
+  },
+  "revenue_pillars": {
+    "predator": {
+      "internal": "predator",
+      "public_code": "leads",
+      "label": "New Trade Leads",
+      "product": "Regional company registrations matched to your trade sector",
+      "price_gbp": 5,
+      "unit": "lead",
+      "storefront": "regional-commerce-data"
+    },
+    "monitor": {
+      "internal": "monitor",
+      "public_code": "intel",
+      "label": "Market Intelligence",
+      "product": "Regional trade pricing and competitor intel",
+      "price_gbp": 29,
+      "unit": "month",
+      "storefront": "regional-commerce-data"
+    },
+    "vulture": {
+      "internal": "vulture",
+      "public_code": "alerts",
+      "label": "Product Packs (Alerts)",
+      "product": "Weekly kit-buyer packs: distress, market match, birth teaser, alternative stock sellers",
+      "price_gbp": 99,
+      "unit": "month",
+      "price_note": "£99 until packs prove denser; £199 reserved for future Pro tier. Stripe STRIPE_PRICE_VULTURE_MONTHLY must point at a £99 Price ID.",
+      "storefront": "both"
+    }
+  }
+}

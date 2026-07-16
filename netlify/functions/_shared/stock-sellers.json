@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "notes": "Curated public UK whole-stock / clearance / auction portals. Links only — no scrape. Tags map to industries.json asset_categories plus broader kit classes.",
+  "sellers": [
+    {
+      "id": "john-pye",
+      "name": "John Pye Auctions",
+      "url": "https://www.johnpye.co.uk/",
+      "blurb": "UK industrial & commercial auctions — plant, tools, vehicles, stock lots.",
+      "tags": ["plant", "tools", "van-fleet", "power-tools", "workshop-lifts", "hgv-vehicles", "pallet-trucks", "warehouse-racking"]
+    },
+    {
+      "id": "wilsons",
+      "name": "Wilsons Auctions",
+      "url": "https://www.wilsonsauctions.com/",
+      "blurb": "Vehicle, plant and commercial asset auctions across the UK & Ireland.",
+      "tags": ["van-fleet", "hgv-vehicles", "vehicle-stock", "plant", "trailers", "workshop-lifts"]
+    },
+    {
+      "id": "wholesale-clearance-uk",
+      "name": "Wholesale Clearance UK",
+      "url": "https://www.wholesaleclearance.co.uk/",
+      "blurb": "Job lots and surplus wholesale stock — pallets, returns, overstocks.",
+      "tags": ["parts-stock", "boiler-stock", "copper-stock", "cable-drums", "IT", "catering", "tools"]
+    },
+    {
+      "id": "gem-wholesale",
+      "name": "Gem Wholesale",
+      "url": "https://www.gemwholesale.co.uk/",
+      "blurb": "Trade wholesale & clearance lines for resellers and kit buyers.",
+      "tags": ["parts-stock", "IT", "tools", "catering", "power-tools"]
+    },
+    {
+      "id": "ebay-business-supply",
+      "name": "eBay Business Supply",
+      "url": "https://www.ebay.co.uk/b/Business-Industrial/12576/bn_1642718",
+      "blurb": "Live UK business & industrial listings — filter by job lot or pallet.",
+      "tags": ["plant", "tools", "power-tools", "van-tools", "test-equipment", "IT", "catering", "boiler-stock"]
+    },
+    {
+      "id": "ebay-job-lot",
+      "name": "eBay · job lot / liquidation",
+      "url": "https://www.ebay.co.uk/sch/i.html?_nkw=job+lot+liquidation&_sacat=12576",
+      "blurb": "Saved search pattern for liquidation and job-lot industrial stock.",
+      "tags": ["parts-stock", "tools", "IT", "catering", "plant", "pallet-trucks"]
+    },
+    {
+      "id": "bca",
+      "name": "BCA Marketplace",
+      "url": "https://www.bca.co.uk/",
+      "blurb": "UK vehicle wholesale marketplace — cars, LCVs, fleet disposals.",
+      "tags": ["van-fleet", "vehicle-stock", "hgv-vehicles"]
+    },
+    {
+      "id": "brightwells",
+      "name": "Brightwells",
+      "url": "https://www.brightwells.com/",
+      "blurb": "Plant, machinery, vehicles and commercial asset sales.",
+      "tags": ["plant", "excavators", "scaffold-towers", "cement-mixers", "hgv-vehicles", "trailers", "van-fleet"]
+    },
+    {
+      "id": "sdl-auctions",
+      "name": "SDL Auctions",
+      "url": "https://www.sdlauctions.co.uk/",
+      "blurb": "Commercial property and business asset auctions — stock & fixtures.",
+      "tags": ["catering", "warehouse-racking", "IT", "plant", "tools"]
+    },
+    {
+      "id": "erith-auctions",
+      "name": "Erith Auctions",
+      "url": "https://www.erithauctions.co.uk/",
+      "blurb": "Plant, tools, vehicles and surplus stock auctions.",
+      "tags": ["plant", "tools", "power-tools", "van-fleet", "scaffold-towers"]
+    },
+    {
+      "id": "stocklot",
+      "name": "Stocklots.co.uk",
+      "url": "https://www.stocklots.co.uk/",
+      "blurb": "Surplus and end-of-line stock lots for trade buyers.",
+      "tags": ["parts-stock", "boiler-stock", "IT", "catering", "copper-stock"]
+    },
+    {
+      "id": "cleared-stock",
+      "name": "Cleared Stock",
+      "url": "https://www.clearedstock.co.uk/",
+      "blurb": "Clearance and returned stock for wholesalers and dealers.",
+      "tags": ["parts-stock", "IT", "tools", "catering"]
+    },
+    {
+      "id": "gordon-brothers-uk",
+      "name": "Gordon Brothers (UK liquidation)",
+      "url": "https://www.gordonbrothers.com/",
+      "blurb": "Retail & industrial liquidation programmes — whole-store and plant lots.",
+      "tags": ["catering", "IT", "warehouse-racking", "plant", "parts-stock"]
+    },
+    {
+      "id": "hutchisons",
+      "name": "Hutchisons Auctions",
+      "url": "https://www.hutchisons.co.uk/",
+      "blurb": "Plant, machinery and commercial chattels auctions.",
+      "tags": ["plant", "excavators", "tools", "hgv-vehicles", "trailers"]
+    }
+  ]
+}

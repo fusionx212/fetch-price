@@ -3,6 +3,7 @@
  * Design: clear hierarchy, one job per email, proof dates, no phone numbers.
  */
 import { leadToCustomerRow, whyMatched } from "./match.mjs";
+import { suggestStockSellers } from "./stock-sellers.mjs";
 
 const FROM =
   process.env.RESEND_FROM || "Regional Commerce Data <brief@regionalcommercedata.co.uk>";
@@ -11,6 +12,7 @@ const BRAND = "#1f5169";
 const MUTED = "#5a6675";
 const INK = "#121820";
 const PANEL = "#f4f6f8";
+const ALERTS_PRICE = "£99/mo";
 
 export async function sendResend({ to, subject, html }) {
   const key = process.env.RESEND_API_KEY;
@@ -150,7 +152,7 @@ export function renderLeadPurchaseEmail(lead, profile) {
     ${leadCard(row)}
     <p style="margin:0 0 16px;color:${MUTED}">Look this firm up on Companies House or your usual sources. <strong>You</strong> decide how to make contact — we don't distribute personal phone numbers.</p>
     <p style="margin:0 0 8px">${btn(`${SITE}/subscribe/?product=leads`, "Buy another matched lead — £5")}</p>
-    <p style="margin:12px 0 0;font-size:13px;color:${MUTED}"><a href="${SITE}/subscribe/?product=alerts" style="color:${BRAND}">Dealers: get distress alerts — £199/mo →</a></p>
+    <p style="margin:12px 0 0;font-size:13px;color:${MUTED}"><a href="${SITE}/packs/" style="color:${BRAND}">Dealers: weekly product packs — ${ALERTS_PRICE} →</a></p>
   `,
   });
 }
@@ -195,12 +197,144 @@ export function renderWeeklyBriefEmail({ profile, matches, totalInPatch, asOf })
     }
     <p style="margin:24px 0 16px;color:${MUTED}">Want the full row (company number, incorporation date, match signals) for one firm?</p>
     <p style="margin:0 0 8px">${btn(`${SITE}/subscribe/?product=leads`, "Get one full matched row — £5")}</p>
-    <p style="margin:16px 0 0;font-size:13px;color:${MUTED}">Asset buyers: <a href="${SITE}/subscribe/?product=alerts" style="color:${BRAND}">early distress alerts + kit bands — £199/mo</a></p>
+    <p style="margin:16px 0 0;font-size:13px;color:${MUTED}">Kit buyers: <a href="${SITE}/packs/" style="color:${BRAND}">weekly product packs — distress + market + stock sellers · ${ALERTS_PRICE}</a></p>
   `,
   });
 }
 
-/** £199 distress alert */
+function sectionHead(label) {
+  return `<p style="margin:28px 0 10px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:${BRAND};font-weight:700">${esc(label)}</p>`;
+}
+
+function sellerListHtml(sellers) {
+  if (!sellers?.length) {
+    return `<p style="margin:0 0 12px;color:${MUTED}">No curated portals matched this week’s asset tags — try eBay Business Supply or John Pye as a starting point.</p>`;
+  }
+  return sellers
+    .map(
+      (s) => `<tr><td style="padding:12px 0;border-top:1px solid #e5e9ee">
+      <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:16px;color:${INK}">
+        <a href="${esc(s.url)}" style="color:${BRAND};text-decoration:none;font-weight:600">${esc(s.name)}</a>
+      </p>
+      <p style="margin:0;font-size:13px;color:${MUTED}">${esc(s.blurb)}</p>
+      ${
+        s.matched_tags?.length
+          ? `<p style="margin:6px 0 0;font-size:11px;color:${BRAND};letter-spacing:0.04em">Tags: ${esc(s.matched_tags.join(" · "))}</p>`
+          : ""
+      }
+    </td></tr>`
+    )
+    .join("");
+}
+
+/**
+ * Paid weekly product pack — Distress · Market · Birth teaser · Alternative stock sellers.
+ * Thin weeks stay honest: we say when a section is quiet.
+ */
+export function renderProductPackEmail({
+  profile,
+  distress = [],
+  market = null,
+  births = [],
+  assetCategories = [],
+  alternatives = null,
+  asOf,
+  thinWeek = false,
+}) {
+  const trade = profile?.industry_slug ? profile.industry_slug.replace(/-/g, " ") : "your trade";
+  const region = (profile?.region_slug || "uk-all").replace(/-/g, " ");
+  const asOfLabel = fmtDate(asOf || new Date());
+  const cats = assetCategories.length
+    ? assetCategories
+    : profile?.asset_interests || [];
+  const sellers = alternatives || suggestStockSellers(cats, { limit: 3 });
+
+  const distressBlock = distress.length
+    ? distress
+        .slice(0, 3)
+        .map((d) => {
+          const band = d.valuations?.[0];
+          const bandLine = band
+            ? `${band.asset_category} · £${band.liquidation_low_gbp ?? "—"} – £${band.liquidation_high_gbp ?? "—"}`
+            : "Kit band pending comps";
+          return `<tr><td style="padding:14px 0;border-top:1px solid #e5e9ee">
+            <p style="margin:0 0 2px;font-size:11px;color:${BRAND};font-weight:700">${esc((d.event_type || "distress").toUpperCase())}</p>
+            <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:17px;color:${INK}">${esc(d.company_name)}</p>
+            <p style="margin:0;font-size:13px;color:${MUTED}">${esc(fmtDate(d.notice_published_at))} · ${esc(d.company_number || "—")} · ${esc(bandLine)}</p>
+          </td></tr>`;
+        })
+        .join("")
+    : `<tr><td style="padding:12px 0"><p style="margin:0;color:${MUTED}">Quiet on distress this week — no new Gazette matches in your patch. That’s normal; we don’t invent rows.</p></td></tr>`;
+
+  const marketBlock = market?.items?.length
+    ? market.items
+        .map(
+          (it) => `<tr><td style="padding:10px 0;border-top:1px solid #e5e9ee">
+        <p style="margin:0 0 2px;font-size:14px;color:${INK}"><a href="${esc(it.url)}" style="color:${BRAND}">${esc(it.title)}</a>${it.price ? ` · <strong>${esc(it.price)}</strong>` : ""}</p>
+      </td></tr>`
+        )
+        .join("")
+    : `<tr><td style="padding:12px 0"><p style="margin:0;color:${MUTED}">No live eBay job-lot sample this week (API off or empty). Use the <strong>Also look here</strong> portals below — same asset tags.</p></td></tr>`;
+
+  const birthBlock = births.length
+    ? births
+        .slice(0, 2)
+        .map((lead, i) => {
+          const row = leadToCustomerRow(lead);
+          return `<tr><td style="padding:12px 0;border-top:1px solid #e5e9ee">
+            <p style="margin:0 0 2px;font-size:11px;color:${BRAND};font-weight:700">BIRTH · #${i + 1}</p>
+            <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:16px;color:${INK}">${esc(row.company_name)}</p>
+            <p style="margin:0;font-size:13px;color:${MUTED}">${esc(row.area || "—")} · listed ${esc(fmtDate(row.listed_at))} · ${esc(row.why)}</p>
+          </td></tr>`;
+        })
+        .join("")
+    : `<tr><td style="padding:12px 0"><p style="margin:0;color:${MUTED}">No new birth teasers in your trade this week.</p></td></tr>`;
+
+  const honesty = thinWeek
+    ? `<div style="background:#fff8f0;border:1px solid #e8c9a8;padding:12px 14px;margin:0 0 20px">
+        <p style="margin:0;font-size:13px;color:${INK}"><strong>Thin week.</strong> Fewer than two hard matches. We still send the pack so you see the watch is live — and the alternative sellers stay useful.</p>
+      </div>`
+    : "";
+
+  return wrap({
+    preheader: `Product pack · ${trade} · ${region} · ${asOfLabel}`,
+    body: `
+    <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND};font-weight:700">Weekly product pack · ${esc(asOfLabel)}</p>
+    <h1 style="margin:0 0 12px;font-family:Georgia,serif;font-size:26px;line-height:1.25;font-weight:600;color:${INK}">Your kit-buyer pack for ${esc(trade)}.</h1>
+    <p style="margin:0 0 16px;color:${MUTED}">Patch: <strong>${esc(region)}</strong>. We supply the intel — you do the work. No phones. Public register + market links only.</p>
+    ${honesty}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PANEL};margin:0 0 8px">
+      <tr><td style="padding:14px 16px">
+        ${factRow("Trade", `<strong>${esc(trade)}</strong>`)}
+        ${factRow("Asset tags", `<strong>${esc(cats.length ? cats.join(", ") : "trade defaults")}</strong>`)}
+        ${factRow("Distress", `<strong>${distress.length}</strong>`)}
+        ${factRow("Birth teasers", `<strong>${births.length}</strong>`)}
+      </td></tr>
+    </table>
+
+    ${sectionHead("1 · Distress")}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${distressBlock}</table>
+
+    ${sectionHead("2 · Market match")}
+    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">Optional eBay Browse sample (job lot / pallet / liquidation). Fail-soft to curated links.</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${marketBlock}</table>
+
+    ${sectionHead("3 · Birth teaser")}
+    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">New firms that may need kit soon — or may be stocking up. Outreach is yours.</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${birthBlock}</table>
+
+    ${sectionHead("4 · Also look here — whole-stock sellers")}
+    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">Curated UK portals tagged to this pack’s assets. Public links only — we don’t scrape them.</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${sellerListHtml(sellers)}</table>
+
+    <p style="margin:28px 0 12px;color:${MUTED}">Want the full methodology or to change trade/patch?</p>
+    <p style="margin:0 0 8px">${btn(`${SITE}/packs/`, "Open product packs")}</p>
+    <p style="margin:12px 0 0;font-size:13px;color:${MUTED}"><a href="https://fetch-price.com/methodology.html" style="color:${BRAND}">How Fetch Price spreads work →</a></p>
+  `,
+  });
+}
+
+/** Distress alert (instant) — also used inside packs */
 export function renderDistressAlertEmail({ death, valuations, profile }) {
   const trade = (death.industry_slug || profile?.industry_slug || "").replace(/-/g, " ");
   const region = (profile?.region_slug || death.region_slug || "uk-all").replace(/-/g, " ");
@@ -226,7 +360,15 @@ export function renderDistressAlertEmail({ death, valuations, profile }) {
       </table>
     </div>
     <p style="margin:0 0 16px;color:${MUTED}">We don't run the auction or sell anyone's assets. You negotiate your own deal. Spreads are market context, not a formal valuation.</p>
-    <p style="margin:0">${btn("https://fetch-price.com/methodology.html", "How Fetch Price spreads work")}</p>
+    ${(() => {
+      const cats = valuations?.map((v) => v.asset_category).filter(Boolean) || profile?.asset_interests || [];
+      const sellers = suggestStockSellers(cats, { limit: 3 });
+      if (!sellers.length) return "";
+      return `${sectionHead("Also look here")}
+      <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">Whole-stock / surplus portals matching these asset tags:</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${sellerListHtml(sellers)}</table>`;
+    })()}
+    <p style="margin:24px 0 0">${btn("https://fetch-price.com/methodology.html", "How Fetch Price spreads work")}</p>
   `,
   });
 }

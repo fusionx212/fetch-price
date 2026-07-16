@@ -1,6 +1,9 @@
 /**
  * Pair intelligence to a subscriber and deliver.
  */
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   fetchMatchedLeads,
   fetchMatchedDeaths,
@@ -12,8 +15,33 @@ import {
   renderLeadPurchaseEmail,
   renderWeeklyBriefEmail,
   renderDistressAlertEmail,
+  renderProductPackEmail,
   logDelivery,
 } from "./delivery.mjs";
+import { suggestStockSellers, optionalEbayJobLotHint } from "./stock-sellers.mjs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+function assetCategoriesForIndustry(slug) {
+  try {
+    const candidates = [
+      join(__dirname, "../../../config/industries.json"),
+      join(__dirname, "industries.json"),
+    ];
+    for (const path of candidates) {
+      try {
+        const cfg = JSON.parse(readFileSync(path, "utf8"));
+        const ind = (cfg.industries || []).find((i) => i.slug === slug);
+        if (ind?.asset_categories) return ind.asset_categories;
+      } catch {
+        /* try next */
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return [];
+}
 
 export async function upsertSubscriberProfile(sb, profile) {
   const p = normalizeProfile(profile);
@@ -161,6 +189,110 @@ export async function deliverDistressAlerts(sb) {
         .update({ last_alert_at: new Date().toISOString() })
         .eq("email", profile.email);
     }
+  }
+  return { sent };
+}
+
+/** Paid Alerts (£99): weekly product pack with alternatives */
+export async function deliverProductPacks(sb) {
+  const { data: subs } = await sb
+    .from("tle_subscriptions")
+    .select("email")
+    .eq("revenue_pillar", "vulture")
+    .eq("status", "active");
+  let sent = 0;
+  for (const sub of subs || []) {
+    const { data: profile } = await sb
+      .from("tle_subscriber_profiles")
+      .select("*")
+      .eq("email", sub.email)
+      .maybeSingle();
+    if (!profile) continue;
+
+    const since = profile.last_pack_at || new Date(Date.now() - 7 * 86400000).toISOString();
+    const deaths = await fetchMatchedDeaths(sb, profile, { since, limit: 8 });
+    const freshDeaths = await filterUndelivered(
+      sb,
+      profile.email,
+      "product_pack",
+      "death",
+      deaths,
+      "id"
+    );
+
+    const births = await fetchMatchedLeads(sb, profile, { tier: "gold", limit: 8, unsoldOnly: true });
+    const freshBirths = await filterUndelivered(
+      sb,
+      profile.email,
+      "product_pack_birth",
+      "lead",
+      births,
+      "company_number"
+    );
+
+    const assetCategories =
+      profile.asset_interests?.length > 0
+        ? profile.asset_interests
+        : assetCategoriesForIndustry(profile.industry_slug);
+
+    const distress = [];
+    for (const death of freshDeaths.slice(0, 3)) {
+      let valuations = [];
+      if (death.company_number) {
+        const { data: vals } = await sb
+          .from("tle_valuations")
+          .select("asset_category, liquidation_low_gbp, liquidation_high_gbp")
+          .eq("company_number", death.company_number)
+          .limit(3);
+        valuations = vals || [];
+      }
+      distress.push({ ...death, valuations });
+    }
+
+    const keyword = assetCategories[0] || profile.industry_slug || "plant";
+    const market = await optionalEbayJobLotHint(String(keyword).replace(/-/g, " "));
+    const alternatives = suggestStockSellers(assetCategories, { limit: 3 });
+    const matchCount = distress.length + Math.min(2, freshBirths.length);
+    const thinWeek = matchCount < 2;
+
+    await sendResend({
+      to: profile.email,
+      subject: thinWeek
+        ? `RCD pack · thin week · ${profile.industry_slug || "your trade"}`
+        : `RCD product pack · ${distress.length} distress · ${profile.industry_slug || "trade"}`,
+      html: renderProductPackEmail({
+        profile,
+        distress,
+        market,
+        births: freshBirths.slice(0, 2),
+        assetCategories,
+        alternatives,
+        thinWeek,
+      }),
+    });
+
+    for (const death of distress) {
+      await logDelivery(sb, {
+        email: profile.email,
+        deliveryType: "product_pack",
+        entityType: "death",
+        entityId: death.id,
+      });
+    }
+    for (const lead of freshBirths.slice(0, 2)) {
+      await logDelivery(sb, {
+        email: profile.email,
+        deliveryType: "product_pack_birth",
+        entityType: "lead",
+        entityId: lead.company_number,
+      });
+    }
+
+    await sb
+      .from("tle_subscriber_profiles")
+      .update({ last_pack_at: new Date().toISOString() })
+      .eq("email", profile.email);
+    sent++;
   }
   return { sent };
 }
