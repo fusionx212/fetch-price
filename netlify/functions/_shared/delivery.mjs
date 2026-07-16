@@ -59,21 +59,29 @@ function wrap({ preheader, body }) {
 <html lang="en-GB">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Regional Commerce Data</title>
-<!--[if !mso]><!--><style>@media (max-width:620px){.wrap{width:100%!important}}</style><!--<![endif]-->
+<!--[if !mso]><!--><style>
+@media (max-width:620px){
+  .wrap{width:100%!important}
+  .pad{padding:20px 16px!important}
+  .h1m{font-size:24px!important}
+  .btnm{display:block!important;width:100%!important;text-align:center!important;box-sizing:border-box!important}
+  .glance td{display:block!important;width:100%!important;border-bottom:1px solid #e5e9ee}
+}
+</style><!--<![endif]-->
 </head>
 <body style="margin:0;padding:0;background:#e8ecf0">
 ${preheader ? `<div style="display:none;max-height:0;overflow:hidden">${esc(preheader)}</div>` : ""}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#e8ecf0">
-<tr><td align="center" style="padding:24px 12px">
+<tr><td align="center" style="padding:16px 10px">
 <table role="presentation" class="wrap" width="560" cellpadding="0" cellspacing="0" style="width:560px;max-width:560px;background:#ffffff;border:1px solid #d5dce3">
-<tr><td style="background:${BRAND};padding:18px 24px">
+<tr><td style="background:${BRAND};padding:16px 20px">
   <p style="margin:0;font-family:Georgia,serif;font-size:20px;color:#fff;letter-spacing:-0.02em">Regional Commerce Data</p>
-  <p style="margin:4px 0 0;font-family:sans-serif;font-size:12px;color:#b8d4e3">UK trade matching · We supply the intel — you do the work</p>
+  <p style="margin:4px 0 0;font-family:sans-serif;font-size:12px;color:#b8d4e3">Monday pack · We supply the intel — you do the work</p>
 </td></tr>
-<tr><td style="padding:28px 24px;font-family:sans-serif;color:${INK};font-size:15px;line-height:1.55">
+<tr><td class="pad" style="padding:24px 20px;font-family:sans-serif;color:${INK};font-size:15px;line-height:1.55">
 ${body}
 </td></tr>
-<tr><td style="padding:16px 24px 24px;border-top:1px solid #e5e9ee;font-family:sans-serif;font-size:12px;color:#999;line-height:1.5">
+<tr><td style="padding:14px 20px 20px;border-top:1px solid #e5e9ee;font-family:sans-serif;font-size:12px;color:#999;line-height:1.5">
   POLICYANDPLAY LTD · Public register intel only · No personal phone numbers<br>
   <a href="${SITE}/privacy.html" style="color:${MUTED}">Privacy</a> ·
   <a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:${MUTED}">Unsubscribe</a>
@@ -83,6 +91,37 @@ ${body}
 </table>
 </body>
 </html>`;
+}
+
+function glanceRow({ distressN, birthN, sellerN }) {
+  return `<table class="glance" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px;background:#eef4f8;border:1px solid #d5dce3">
+<tr>
+  <td align="center" style="padding:14px 8px;width:33%">
+    <p style="margin:0;font-family:Georgia,serif;font-size:28px;line-height:1;color:${INK};font-weight:600">${distressN}</p>
+    <p style="margin:6px 0 0;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:${MUTED}">Distress</p>
+  </td>
+  <td align="center" style="padding:14px 8px;width:33%;border-left:1px solid #d5dce3">
+    <p style="margin:0;font-family:Georgia,serif;font-size:28px;line-height:1;color:${INK};font-weight:600">${birthN}</p>
+    <p style="margin:6px 0 0;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:${MUTED}">Births</p>
+  </td>
+  <td align="center" style="padding:14px 8px;width:33%;border-left:1px solid #d5dce3">
+    <p style="margin:0;font-family:Georgia,serif;font-size:28px;line-height:1;color:${INK};font-weight:600">${sellerN}</p>
+    <p style="margin:6px 0 0;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:${MUTED}">Portals</p>
+  </td>
+</tr>
+</table>`;
+}
+
+function chipRow(tags) {
+  if (!tags?.length) return "";
+  const chips = tags
+    .slice(0, 8)
+    .map(
+      (t) =>
+        `<span style="display:inline-block;margin:0 6px 6px 0;padding:5px 9px;background:#e2eef4;border:1px solid #c5d9e4;color:${BRAND};font-size:12px;font-weight:600">${esc(String(t).replace(/-/g, " "))}</span>`
+    )
+    .join("");
+  return `<p style="margin:0 0 16px">${chips}</p>`;
 }
 
 function factRow(label, value) {
@@ -208,20 +247,13 @@ function sectionHead(label) {
 
 function sellerListHtml(sellers) {
   if (!sellers?.length) {
-    return `<p style="margin:0 0 12px;color:${MUTED}">No curated portals matched this week’s asset tags — try eBay Business Supply or John Pye as a starting point.</p>`;
+    return `<p style="margin:0 0 12px;color:${MUTED}">No curated portals matched this week’s asset tags — try <a href="https://www.ebay.co.uk/b/Business-Industrial/12576" style="color:${BRAND}">eBay Business &amp; Industrial</a> or John Pye.</p>`;
   }
   return sellers
     .map(
-      (s) => `<tr><td style="padding:12px 0;border-top:1px solid #e5e9ee">
-      <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:16px;color:${INK}">
-        <a href="${esc(s.url)}" style="color:${BRAND};text-decoration:none;font-weight:600">${esc(s.name)}</a>
-      </p>
-      <p style="margin:0;font-size:13px;color:${MUTED}">${esc(s.blurb)}</p>
-      ${
-        s.matched_tags?.length
-          ? `<p style="margin:6px 0 0;font-size:11px;color:${BRAND};letter-spacing:0.04em">Tags: ${esc(s.matched_tags.join(" · "))}</p>`
-          : ""
-      }
+      (s) => `<tr><td style="padding:10px 0;border-top:1px solid #e5e9ee">
+      <a class="btnm" href="${esc(s.url)}" style="display:block;background:#eef4f8;border:1px solid #d5dce3;color:${INK};text-decoration:none;font-weight:600;font-size:15px;padding:14px 14px;margin:0 0 6px">${esc(s.name)} →</a>
+      <p style="margin:0;font-size:13px;color:${MUTED}">${esc(s.blurb || "")}</p>
     </td></tr>`
     )
     .join("");
@@ -255,12 +287,12 @@ export function renderProductPackEmail({
         .map((d) => {
           const band = d.valuations?.[0];
           const bandLine = band
-            ? `${band.asset_category} · £${band.liquidation_low_gbp ?? "—"} – £${band.liquidation_high_gbp ?? "—"}`
+            ? `${String(band.asset_category).replace(/-/g, " ")} · £${band.liquidation_low_gbp ?? "—"} – £${band.liquidation_high_gbp ?? "—"}`
             : "Kit band pending comps";
-          return `<tr><td style="padding:14px 0;border-top:1px solid #e5e9ee">
-            <p style="margin:0 0 2px;font-size:11px;color:${BRAND};font-weight:700">${esc((d.event_type || "distress").toUpperCase())}</p>
-            <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:17px;color:${INK}">${esc(d.company_name)}</p>
-            <p style="margin:0;font-size:13px;color:${MUTED}">${esc(fmtDate(d.notice_published_at))} · ${esc(d.company_number || "—")} · ${esc(bandLine)}</p>
+          return `<tr><td style="padding:16px 12px;border-top:1px solid #e5e9ee;border-left:4px solid #c45c26;background:#fffaf7">
+            <p style="margin:0 0 4px;font-size:11px;color:#c45c26;font-weight:700;letter-spacing:0.05em">${esc((d.event_type || "distress").toUpperCase())}</p>
+            <p style="margin:0 0 6px;font-family:Georgia,serif;font-size:19px;line-height:1.25;color:${INK}">${esc(d.company_name)}</p>
+            <p style="margin:0;font-size:14px;color:${MUTED};line-height:1.4">${esc(fmtDate(d.notice_published_at))}<br>${esc(d.company_number || "—")}<br>${esc(bandLine)}</p>
           </td></tr>`;
         })
         .join("")
@@ -297,38 +329,32 @@ export function renderProductPackEmail({
     : "";
 
   return wrap({
-    preheader: `Product pack · ${trade} · ${region} · ${asOfLabel}`,
+    preheader: `Pack · ${distress.length} distress · ${births.length} births · ${trade} · ${asOfLabel}`,
     body: `
-    <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND};font-weight:700">Weekly product pack · ${esc(asOfLabel)}</p>
-    <h1 style="margin:0 0 12px;font-family:Georgia,serif;font-size:26px;line-height:1.25;font-weight:600;color:${INK}">Your kit-buyer pack for ${esc(trade)}.</h1>
-    <p style="margin:0 0 16px;color:${MUTED}">Patch: <strong>${esc(region)}</strong>. We supply the intel — you do the work. No phones. Public register + market links only.</p>
+    <p style="margin:0 0 6px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND};font-weight:700">Monday pack · ${esc(asOfLabel)}</p>
+    <h1 class="h1m" style="margin:0 0 10px;font-family:Georgia,serif;font-size:26px;line-height:1.22;font-weight:600;color:${INK}">${esc(trade)} · ${esc(region)}</h1>
+    <p style="margin:0 0 14px;color:${MUTED};font-size:14px">Glance the numbers, then open the rows. Public intel only — you run the deal.</p>
     ${honesty}
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PANEL};margin:0 0 8px">
-      <tr><td style="padding:14px 16px">
-        ${factRow("Trade", `<strong>${esc(trade)}</strong>`)}
-        ${factRow("Asset tags", `<strong>${esc(cats.length ? cats.join(", ") : "trade defaults")}</strong>`)}
-        ${factRow("Distress", `<strong>${distress.length}</strong>`)}
-        ${factRow("Birth teasers", `<strong>${births.length}</strong>`)}
-      </td></tr>
-    </table>
+    ${glanceRow({ distressN: distress.length, birthN: births.length, sellerN: sellers.length })}
+    ${chipRow(cats)}
 
     ${sectionHead("1 · Distress")}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${distressBlock}</table>
 
     ${sectionHead("2 · Market match")}
-    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">Optional eBay Browse sample (job lot / pallet / liquidation). Fail-soft to curated links.</p>
+    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">eBay sample when live — else use portals below.</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${marketBlock}</table>
 
     ${sectionHead("3 · Birth teaser")}
-    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">New firms that may need kit soon — or may be stocking up. Outreach is yours.</p>
+    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">New firms that may need kit soon.</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${birthBlock}</table>
 
-    ${sectionHead("4 · Also look here — whole-stock sellers")}
-    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">Curated UK portals tagged to this pack’s assets. Public links only — we don’t scrape them.</p>
+    ${sectionHead("4 · Also look here")}
+    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">Tap a portal — curated links only.</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${sellerListHtml(sellers)}</table>
 
-    <p style="margin:28px 0 12px;color:${MUTED}">Want the full methodology or to change trade/patch?</p>
-    <p style="margin:0 0 8px">${btn(`${SITE}/packs/`, "Open product packs")}</p>
+    <p style="margin:24px 0 10px">${btn(`${SITE}/packs/view/`, "Open phone digest")}</p>
+    <p style="margin:0 0 8px"><a class="btnm" href="${SITE}/packs/" style="display:inline-block;color:${BRAND};font-weight:600">Packs sell page →</a></p>
     <p style="margin:12px 0 0;font-size:13px;color:${MUTED}"><a href="https://fetch-price.com/methodology.html" style="color:${BRAND}">How Fetch Price spreads work →</a></p>
   `,
   });

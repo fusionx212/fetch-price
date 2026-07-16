@@ -66,11 +66,11 @@
       "tags": ["catering", "warehouse-racking", "IT", "plant", "tools"]
     },
     {
-      "id": "erith-auctions",
-      "name": "Erith Auctions",
-      "url": "https://www.erithauctions.co.uk/",
-      "blurb": "Plant, tools, vehicles and surplus stock auctions.",
-      "tags": ["plant", "tools", "power-tools", "van-fleet", "scaffold-towers"]
+      "id": "wilsons-auctions",
+      "name": "Wilsons Auctions",
+      "url": "https://www.wilsonsauctions.com/",
+      "blurb": "Plant, vehicles, tools and commercial asset auctions across the UK.",
+      "tags": ["plant", "tools", "power-tools", "van-fleet", "scaffold-towers", "hgv-vehicles"]
     },
     {
       "id": "stocklot",
