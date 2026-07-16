@@ -7,14 +7,18 @@
       "name": "John Pye Auctions",
       "url": "https://www.johnpye.co.uk/",
       "blurb": "UK industrial & commercial auctions — plant, tools, vehicles, stock lots.",
-      "tags": ["plant", "tools", "van-fleet", "power-tools", "workshop-lifts", "hgv-vehicles", "pallet-trucks", "warehouse-racking"]
+      "tags": ["plant", "tools", "van-fleet", "power-tools", "workshop-lifts", "hgv-vehicles", "pallet-trucks", "warehouse-racking"],
+      "calendar_url": "https://www.johnpye.co.uk/auctions",
+      "next_sale_note": "Check their auctions calendar for plant & stock sale dates."
     },
     {
       "id": "wilsons",
       "name": "Wilsons Auctions",
       "url": "https://www.wilsonsauctions.com/",
       "blurb": "Vehicle, plant and commercial asset auctions across the UK & Ireland.",
-      "tags": ["van-fleet", "hgv-vehicles", "vehicle-stock", "plant", "trailers", "workshop-lifts"]
+      "tags": ["van-fleet", "hgv-vehicles", "vehicle-stock", "plant", "trailers", "workshop-lifts"],
+      "calendar_url": "https://www.wilsonsauctions.com/auctions",
+      "next_sale_note": "Upcoming sales listed on their auctions page — confirm dates on seller site."
     },
     {
       "id": "wholesale-clearance-uk",
@@ -56,7 +60,9 @@
       "name": "Brightwells",
       "url": "https://www.brightwells.com/",
       "blurb": "Plant, machinery, vehicles and commercial asset sales.",
-      "tags": ["plant", "excavators", "scaffold-towers", "cement-mixers", "hgv-vehicles", "trailers", "van-fleet"]
+      "tags": ["plant", "excavators", "scaffold-towers", "cement-mixers", "hgv-vehicles", "trailers", "van-fleet"],
+      "calendar_url": "https://www.brightwells.com/auctions",
+      "next_sale_note": "Plant & machinery sale dates on Brightwells auctions calendar."
     },
     {
       "id": "sdl-auctions",
