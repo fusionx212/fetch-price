@@ -245,22 +245,158 @@ function sectionHead(label) {
   return `<p style="margin:28px 0 10px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:${BRAND};font-weight:700">${esc(label)}</p>`;
 }
 
+function chSearchUrl(companyNumber) {
+  if (!companyNumber) return null;
+  return `https://find-and-update.company-information.service.gov.uk/company/${encodeURIComponent(String(companyNumber))}`;
+}
+
+function whyDistressMatters(d) {
+  const event = String(d.event_type || "distress").replace(/_/g, " ");
+  const cats = (d.valuations || [])
+    .map((v) => String(v.asset_category || "").replace(/-/g, " "))
+    .filter(Boolean);
+  const kit = cats.length ? cats.slice(0, 3).join(", ") : "trade kit";
+  const patch = (d.region_slug || "").replace(/-/g, " ") || "your patch";
+  return `${event} notice in ${patch} — watch for ${kit} coming off-hire / through IP or auction lanes this week.`;
+}
+
+function valuationBandsHtml(valuations = []) {
+  if (!valuations.length) {
+    return factRow("Kit bands", "Pending comps — still useful as a chase lead");
+  }
+  return valuations
+    .slice(0, 3)
+    .map((band) => {
+      const label = String(band.asset_category || "kit").replace(/-/g, " ");
+      const low = band.liquidation_low_gbp ?? "—";
+      const high = band.liquidation_high_gbp ?? "—";
+      return factRow(
+        "Clearance band",
+        `${esc(label)} · £${esc(low)} – £${esc(high)}`
+      );
+    })
+    .join("");
+}
+
+function distressCardHtml(d) {
+  const trade = (d.industry_slug || "").replace(/-/g, " ") || "—";
+  const region = (d.region_slug || "").replace(/-/g, " ") || "—";
+  const ch = chSearchUrl(d.company_number);
+  const est =
+    d.liquidation_estimated_gbp != null
+      ? `£${Number(d.liquidation_estimated_gbp).toLocaleString("en-GB")}`
+      : null;
+  return `<tr><td style="padding:16px 12px;border-top:1px solid #e5e9ee;border-left:4px solid #c45c26;background:#fffaf7">
+    <p style="margin:0 0 4px;font-size:11px;color:#c45c26;font-weight:700;letter-spacing:0.05em">${esc((d.event_type || "distress").toUpperCase())}</p>
+    <p style="margin:0 0 10px;font-family:Georgia,serif;font-size:19px;line-height:1.25;color:${INK}">${esc(d.company_name)}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      ${factRow("Public notice", esc(fmtDate(d.notice_published_at)))}
+      ${factRow("Company no.", esc(d.company_number || "—"))}
+      ${factRow("Trade / patch", `${esc(trade)} · ${esc(region)}`)}
+      ${est ? factRow("Est. liquidation", esc(est)) : ""}
+      ${valuationBandsHtml(d.valuations)}
+      ${factRow("Why it matters", esc(whyDistressMatters(d)))}
+      ${factRow(
+        "Next step",
+        "Check Companies House filing trail, then watch auction / surplus portals for matching kit tags"
+      )}
+    </table>
+    ${
+      ch
+        ? `<p style="margin:12px 0 0"><a class="btnm" href="${esc(ch)}" style="display:inline-block;background:${BRAND};color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 14px">Open on Companies House →</a></p>`
+        : ""
+    }
+  </td></tr>`;
+}
+
+function birthCardHtml(lead, i) {
+  const row = leadToCustomerRow(lead);
+  const ch = chSearchUrl(row.company_number);
+  const sic =
+    row.sic_codes?.length > 0
+      ? row.sic_codes.map((c) => esc(String(c))).join(", ")
+      : null;
+  const trade = (row.industry_slug || "").replace(/-/g, " ") || "—";
+  return `<tr><td style="padding:14px 0;border-top:1px solid #e5e9ee">
+    <p style="margin:0 0 2px;font-size:11px;color:${BRAND};font-weight:700">${esc((row.quality_tier || "gold").toUpperCase())} BIRTH · #${i + 1}</p>
+    <p style="margin:0 0 10px;font-family:Georgia,serif;font-size:17px;color:${INK}">${esc(row.company_name)}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      ${factRow("Company no.", esc(row.company_number || "—"))}
+      ${factRow("Incorporated", esc(fmtDate(row.incorporated_on)))}
+      ${factRow("Listed by us", esc(fmtDate(row.listed_at)))}
+      ${factRow("Status", esc(row.company_status || "active"))}
+      ${factRow("Area", esc(row.area || "—"))}
+      ${factRow("Trade", esc(trade))}
+      ${sic ? factRow("SIC", sic) : ""}
+      ${factRow("Why matched", esc(row.why))}
+      ${factRow("Buyer angle", "New active firm in your trade — may need plant, tools, vans or stock within weeks")}
+    </table>
+    ${
+      ch
+        ? `<p style="margin:10px 0 0"><a href="${esc(ch)}" style="color:${BRAND};font-weight:600;font-size:14px">Companies House →</a></p>`
+        : ""
+    }
+  </td></tr>`;
+}
+
+function marketHuntHtml(cats, market) {
+  const tags = (cats || []).slice(0, 6).map((t) => String(t).replace(/-/g, " "));
+  const tagLine = tags.length ? tags.join(" · ") : "plant · tools · stock";
+  const live = market?.items?.length
+    ? market.items
+        .map(
+          (it) => `<tr><td style="padding:10px 0;border-top:1px solid #e5e9ee">
+        <p style="margin:0 0 2px;font-size:14px;color:${INK}"><a href="${esc(it.url)}" style="color:${BRAND}">${esc(it.title)}</a>${it.price ? ` · <strong>${esc(it.price)}</strong>` : ""}</p>
+      </td></tr>`
+        )
+        .join("")
+    : "";
+  const hunt = `<tr><td style="padding:12px 0;${live ? "border-top:1px solid #e5e9ee;" : ""}">
+    <p style="margin:0 0 8px;font-size:14px;color:${INK}"><strong>Hunt this week</strong> — search auction &amp; surplus lanes for:</p>
+    <p style="margin:0 0 8px;font-size:14px;color:${BRAND};font-weight:600">${esc(tagLine)}</p>
+    <p style="margin:0;font-size:13px;color:${MUTED}">Look for job lots, pallet lots, ex-hire plant, van clear-outs, and workshop packages. Live eBay samples appear above when the API is on; otherwise use the portals below (same tags).</p>
+  </td></tr>`;
+  return `${live}${hunt}`;
+}
+
 function sellerListHtml(sellers) {
   if (!sellers?.length) {
     return `<p style="margin:0 0 12px;color:${MUTED}">No curated portals matched this week’s asset tags — try <a href="https://www.ebay.co.uk/b/Business-Industrial/12576" style="color:${BRAND}">eBay Business &amp; Industrial</a> or John Pye.</p>`;
   }
   return sellers
-    .map(
-      (s) => `<tr><td style="padding:10px 0;border-top:1px solid #e5e9ee">
+    .map((s) => {
+      const tags = (s.matched_tags || [])
+        .slice(0, 4)
+        .map((t) => String(t).replace(/-/g, " "))
+        .join(" · ");
+      return `<tr><td style="padding:10px 0;border-top:1px solid #e5e9ee">
       <a class="btnm" href="${esc(s.url)}" style="display:block;background:#eef4f8;border:1px solid #d5dce3;color:${INK};text-decoration:none;font-weight:600;font-size:15px;padding:14px 14px;margin:0 0 6px">${esc(s.name)} →</a>
-      <p style="margin:0;font-size:13px;color:${MUTED}">${esc(s.blurb || "")}</p>
-    </td></tr>`
-    )
+      <p style="margin:0 0 4px;font-size:13px;color:${MUTED}">${esc(s.blurb || "")}</p>
+      ${tags ? `<p style="margin:0;font-size:12px;color:${BRAND};font-weight:600">Matched tags: ${esc(tags)}</p>` : ""}
+    </td></tr>`;
+    })
     .join("");
+}
+
+function nextActionsHtml({ distressN, birthN, sellers }) {
+  const sellerNames = (sellers || [])
+    .slice(0, 2)
+    .map((s) => s.name)
+    .join(" / ");
+  return `<div style="background:${PANEL};border:1px solid #d5dce3;padding:14px 16px;margin:8px 0 0">
+    <p style="margin:0 0 10px;font-size:14px;color:${INK}"><strong>This week’s actions</strong></p>
+    <ol style="margin:0;padding-left:18px;color:${MUTED};font-size:14px;line-height:1.55">
+      <li>Open each distress company on Companies House — note filing dates and status changes (${distressN} this pack).</li>
+      <li>Scan ${esc(sellerNames || "auction portals")} for tags matching your asset chips.</li>
+      <li>Log birth teasers (${birthN}) as warm kit demand — new active firms in your trade/patch.</li>
+      <li>Keep Monday cadence: next pack lands next week; we don’t invent quiet-week rows.</li>
+    </ol>
+  </div>`;
 }
 
 /**
  * Paid weekly product pack — Distress · Market · Birth teaser · Alternative stock sellers.
+ * Dense yard ledger: every row carries company context, kit bands, and a next step.
  * Thin weeks stay honest: we say when a section is quiet.
  */
 export function renderProductPackEmail({
@@ -282,49 +418,16 @@ export function renderProductPackEmail({
   const sellers = alternatives || suggestStockSellers(cats, { limit: 3 });
 
   const distressBlock = distress.length
-    ? distress
-        .slice(0, 3)
-        .map((d) => {
-          const band = d.valuations?.[0];
-          const bandLine = band
-            ? `${String(band.asset_category).replace(/-/g, " ")} · £${band.liquidation_low_gbp ?? "—"} – £${band.liquidation_high_gbp ?? "—"}`
-            : "Kit band pending comps";
-          return `<tr><td style="padding:16px 12px;border-top:1px solid #e5e9ee;border-left:4px solid #c45c26;background:#fffaf7">
-            <p style="margin:0 0 4px;font-size:11px;color:#c45c26;font-weight:700;letter-spacing:0.05em">${esc((d.event_type || "distress").toUpperCase())}</p>
-            <p style="margin:0 0 6px;font-family:Georgia,serif;font-size:19px;line-height:1.25;color:${INK}">${esc(d.company_name)}</p>
-            <p style="margin:0;font-size:14px;color:${MUTED};line-height:1.4">${esc(fmtDate(d.notice_published_at))}<br>${esc(d.company_number || "—")}<br>${esc(bandLine)}</p>
-          </td></tr>`;
-        })
-        .join("")
-    : `<tr><td style="padding:12px 0"><p style="margin:0;color:${MUTED}">Quiet on distress this week — no new Gazette matches in your patch. That’s normal; we don’t invent rows.</p></td></tr>`;
-
-  const marketBlock = market?.items?.length
-    ? market.items
-        .map(
-          (it) => `<tr><td style="padding:10px 0;border-top:1px solid #e5e9ee">
-        <p style="margin:0 0 2px;font-size:14px;color:${INK}"><a href="${esc(it.url)}" style="color:${BRAND}">${esc(it.title)}</a>${it.price ? ` · <strong>${esc(it.price)}</strong>` : ""}</p>
-      </td></tr>`
-        )
-        .join("")
-    : `<tr><td style="padding:12px 0"><p style="margin:0;color:${MUTED}">No live eBay job-lot sample this week (API off or empty). Use the <strong>Also look here</strong> portals below — same asset tags.</p></td></tr>`;
+    ? distress.slice(0, 5).map(distressCardHtml).join("")
+    : `<tr><td style="padding:12px 0"><p style="margin:0;color:${MUTED}">Quiet on distress this week — no new Gazette matches in your patch. That’s normal; we don’t invent rows. Portals + hunt cues below still earn the week.</p></td></tr>`;
 
   const birthBlock = births.length
-    ? births
-        .slice(0, 2)
-        .map((lead, i) => {
-          const row = leadToCustomerRow(lead);
-          return `<tr><td style="padding:12px 0;border-top:1px solid #e5e9ee">
-            <p style="margin:0 0 2px;font-size:11px;color:${BRAND};font-weight:700">BIRTH · #${i + 1}</p>
-            <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:16px;color:${INK}">${esc(row.company_name)}</p>
-            <p style="margin:0;font-size:13px;color:${MUTED}">${esc(row.area || "—")} · listed ${esc(fmtDate(row.listed_at))} · ${esc(row.why)}</p>
-          </td></tr>`;
-        })
-        .join("")
+    ? births.slice(0, 3).map((lead, i) => birthCardHtml(lead, i)).join("")
     : `<tr><td style="padding:12px 0"><p style="margin:0;color:${MUTED}">No new birth teasers in your trade this week.</p></td></tr>`;
 
   const honesty = thinWeek
     ? `<div style="background:#fff8f0;border:1px solid #e8c9a8;padding:12px 14px;margin:0 0 20px">
-        <p style="margin:0;font-size:13px;color:${INK}"><strong>Thin week.</strong> Fewer than two hard matches. We still send the pack so you see the watch is live — and the alternative sellers stay useful.</p>
+        <p style="margin:0;font-size:13px;color:${INK}"><strong>Thin week.</strong> Fewer than two hard matches. We still send the full ledger so you see the watch is live — hunt cues and alternative sellers stay useful.</p>
       </div>`
     : "";
 
@@ -333,25 +436,29 @@ export function renderProductPackEmail({
     body: `
     <p style="margin:0 0 6px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND};font-weight:700">Monday pack · ${esc(asOfLabel)}</p>
     <h1 class="h1m" style="margin:0 0 10px;font-family:Georgia,serif;font-size:26px;line-height:1.22;font-weight:600;color:${INK}">${esc(trade)} · ${esc(region)}</h1>
-    <p style="margin:0 0 14px;color:${MUTED};font-size:14px">Glance the numbers, then open the rows. Public intel only — you run the deal.</p>
+    <p style="margin:0 0 14px;color:${MUTED};font-size:14px">Dense weekly yard ledger — company context, kit bands, seller lanes, and next steps. Public intel only; you run the deal.</p>
     ${honesty}
     ${glanceRow({ distressN: distress.length, birthN: births.length, sellerN: sellers.length })}
     ${chipRow(cats)}
 
     ${sectionHead("1 · Distress")}
+    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">Gazette / insolvency signals with kit clearance context for your trade.</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${distressBlock}</table>
 
     ${sectionHead("2 · Market match")}
-    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">eBay sample when live — else use portals below.</p>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${marketBlock}</table>
+    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">What to hunt this week across auction and surplus lanes.</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${marketHuntHtml(cats, market)}</table>
 
-    ${sectionHead("3 · Birth teaser")}
-    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">New firms that may need kit soon.</p>
+    ${sectionHead("3 · Birth teasers")}
+    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">New register firms that may need kit soon — full match context.</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${birthBlock}</table>
 
     ${sectionHead("4 · Also look here")}
-    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">Tap a portal — curated links only.</p>
+    <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">Curated whole-stock / auction portals matched to your asset tags.</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${sellerListHtml(sellers)}</table>
+
+    ${sectionHead("5 · Next actions")}
+    ${nextActionsHtml({ distressN: distress.length, birthN: births.length, sellers })}
 
     <p style="margin:24px 0 10px">${btn(`${SITE}/packs/view/`, "Open phone digest")}</p>
     <p style="margin:0 0 8px"><a class="btnm" href="${SITE}/packs/" style="display:inline-block;color:${BRAND};font-weight:600">Packs sell page →</a></p>

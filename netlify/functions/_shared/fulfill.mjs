@@ -236,7 +236,7 @@ export async function deliverProductPacks(sb) {
         : assetCategoriesForIndustry(profile.industry_slug);
 
     const distress = [];
-    for (const death of freshDeaths.slice(0, 3)) {
+    for (const death of freshDeaths.slice(0, 5)) {
       let valuations = [];
       if (death.company_number) {
         const { data: vals } = await sb
@@ -252,7 +252,8 @@ export async function deliverProductPacks(sb) {
     const keyword = assetCategories[0] || profile.industry_slug || "plant";
     const market = await optionalEbayJobLotHint(String(keyword).replace(/-/g, " "));
     const alternatives = suggestStockSellers(assetCategories, { limit: 3 });
-    const matchCount = distress.length + Math.min(2, freshBirths.length);
+    const packBirths = freshBirths.slice(0, 3);
+    const matchCount = distress.length + Math.min(3, packBirths.length);
     const thinWeek = matchCount < 2;
 
     await sendResend({
@@ -264,7 +265,7 @@ export async function deliverProductPacks(sb) {
         profile,
         distress,
         market,
-        births: freshBirths.slice(0, 2),
+        births: packBirths,
         assetCategories,
         alternatives,
         thinWeek,
@@ -279,7 +280,7 @@ export async function deliverProductPacks(sb) {
         entityId: death.id,
       });
     }
-    for (const lead of freshBirths.slice(0, 2)) {
+    for (const lead of packBirths) {
       await logDelivery(sb, {
         email: profile.email,
         deliveryType: "product_pack_birth",

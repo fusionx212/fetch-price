@@ -103,8 +103,11 @@ export function whyMatched(lead) {
 
 export function leadToCustomerRow(lead) {
   const co = lead.tle_companies || {};
+  const sic = Array.isArray(co.sic_codes)
+    ? co.sic_codes.filter(Boolean).slice(0, 3)
+    : [];
   return {
-    company_name: co.company_name,
+    company_name: co.company_name || lead.company_name,
     company_number: lead.company_number,
     incorporated_on: co.incorporated_on,
     industry_slug: lead.industry_slug,
@@ -115,6 +118,7 @@ export function leadToCustomerRow(lead) {
     quality_score: lead.quality_score,
     listed_at: lead.created_at,
     why: whyMatched(lead),
+    sic_codes: sic,
   };
 }
 
