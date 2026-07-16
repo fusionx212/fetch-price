@@ -50,7 +50,8 @@ export default async (req) => {
       email,
       industry_slug,
       region_slug,
-      delivery_cadence: internal === "predator" ? "instant" : internal === "monitor" ? "monthly" : "instant",
+      delivery_cadence:
+        internal === "predator" ? "instant" : internal === "monitor" ? "monthly" : "weekly",
       is_free_list: false,
     });
 

@@ -229,12 +229,41 @@ a:hover { color: var(--copper); }
   border: 1px solid var(--line);
   overflow: hidden;
 }
-.industry-card img {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 400 / 260;
-  object-fit: cover;
+/* No external <img> — SVG-as-img was rendering broken in browsers despite 200s */
+.industry-visual {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.2rem;
+  min-height: 8.5rem;
+  padding: 1.1rem 1.15rem;
+  color: #f8fafc;
+  background: linear-gradient(145deg, #1e2630 0%, #334155 70%, #1f5169 100%);
+}
+.industry-visual[data-trade="construction"] {
+  background: linear-gradient(145deg, #1e2630 0%, #7c2d12 55%, #b45309 100%);
+}
+.industry-visual[data-trade="motor-trade"] {
+  background: linear-gradient(145deg, #0f172a 0%, #1e3a5f 55%, #334155 100%);
+}
+.industry-visual[data-trade="haulage"] {
+  background: linear-gradient(145deg, #111827 0%, #14532d 60%, #166534 100%);
+}
+.industry-visual[data-trade="plumbing-heating"] {
+  background: linear-gradient(145deg, #1e2630 0%, #0e7490 55%, #155e75 100%);
+}
+.industry-visual[data-trade="electrical"] {
+  background: linear-gradient(145deg, #1e1b4b 0%, #4338ca 55%, #6366f1 100%);
+}
+.industry-visual strong {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.industry-visual small {
+  font-size: 0.8rem;
+  color: rgba(248, 250, 252, 0.78);
 }
 .industry-body { padding: 0.85rem 1rem 1rem; }
 .industry-body h3 {
