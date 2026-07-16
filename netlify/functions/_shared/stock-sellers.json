@@ -32,16 +32,16 @@
     },
     {
       "id": "ebay-business-supply",
-      "name": "eBay Business Supply",
-      "url": "https://www.ebay.co.uk/b/Business-Industrial/12576/bn_1642718",
-      "blurb": "Live UK business & industrial listings — filter by job lot or pallet.",
+      "name": "eBay Business & Industrial",
+      "url": "https://www.ebay.co.uk/b/Business-Industrial/12576",
+      "blurb": "UK Business & Industrial category — filter by job lot, pallet, or asset type.",
       "tags": ["plant", "tools", "power-tools", "van-tools", "test-equipment", "IT", "catering", "boiler-stock"]
     },
     {
       "id": "ebay-job-lot",
       "name": "eBay · job lot / liquidation",
-      "url": "https://www.ebay.co.uk/sch/i.html?_nkw=job+lot+liquidation&_sacat=12576",
-      "blurb": "Saved search pattern for liquidation and job-lot industrial stock.",
+      "url": "https://www.ebay.co.uk/sch/Business-Industrial/12576/i.html?_nkw=job+lot+liquidation",
+      "blurb": "Business & Industrial search for liquidation and job-lot stock.",
       "tags": ["parts-stock", "tools", "IT", "catering", "plant", "pallet-trucks"]
     },
     {
