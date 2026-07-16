@@ -9,6 +9,7 @@ import {
   fetchMatchedDeaths,
   filterUndelivered,
   normalizeProfile,
+  TRADE_SLUGS,
 } from "./match.mjs";
 import {
   sendResend,
@@ -41,6 +42,23 @@ function assetCategoriesForIndustry(slug) {
     /* ignore */
   }
   return [];
+}
+
+/** Expand trade-slug interests into kit categories; keep genuine kit tags as-is. */
+function resolvePackAssetCategories(profile) {
+  const interests = profile.asset_interests || [];
+  const tradeFromAssets = interests.filter((s) => TRADE_SLUGS.has(s));
+  const kitTags = interests.filter((s) => !TRADE_SLUGS.has(s));
+  const trades =
+    Array.isArray(profile.industry_slugs) && profile.industry_slugs.length
+      ? profile.industry_slugs
+      : tradeFromAssets;
+  if (trades.length) {
+    const cats = trades.flatMap((s) => assetCategoriesForIndustry(s));
+    return [...new Set([...cats, ...kitTags])];
+  }
+  if (kitTags.length) return kitTags;
+  return assetCategoriesForIndustry(profile.industry_slug);
 }
 
 export async function upsertSubscriberProfile(sb, profile) {
@@ -230,10 +248,7 @@ export async function deliverProductPacks(sb) {
       "company_number"
     );
 
-    const assetCategories =
-      profile.asset_interests?.length > 0
-        ? profile.asset_interests
-        : assetCategoriesForIndustry(profile.industry_slug);
+    const assetCategories = resolvePackAssetCategories(profile);
 
     const distress = [];
     for (const death of freshDeaths.slice(0, 5)) {

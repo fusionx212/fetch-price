@@ -34,12 +34,18 @@ export default async (req) => {
   const email = String(body.email || "").trim().toLowerCase();
   const requested = String(body.product || body.pillar || "").trim().toLowerCase();
   const internal = PUBLIC_TO_INTERNAL[requested];
-  const industry_slug = TRADE_SLUGS.has(body.industry_slug) ? body.industry_slug : null;
+  const rawSlugs = Array.isArray(body.industry_slugs)
+    ? body.industry_slugs
+    : body.industry_slug
+      ? [body.industry_slug]
+      : [];
+  const industry_slugs = [...new Set(rawSlugs.map((s) => String(s || "").trim()).filter((s) => TRADE_SLUGS.has(s)))];
+  const industry_slug = industry_slugs[0] || null;
   const region_slug = REGION_SLUGS.has(body.region_slug) ? body.region_slug : "uk-all";
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json(400, { error: "Invalid email" });
   if (!internal) return json(400, { error: "Invalid product — use leads, intel, or alerts" });
-  if (!industry_slug) return json(400, { error: "Pick your trade so we can match leads" });
+  if (!industry_slug) return json(400, { error: "Pick at least one business interest (trade) so we can match packs" });
 
   const publicCode = INTERNAL_TO_PUBLIC[internal];
   const base = body.returnUrl || "https://regionalcommercedata.co.uk";
@@ -49,6 +55,9 @@ export default async (req) => {
     await upsertSubscriberProfile(sb, {
       email,
       industry_slug,
+      industry_slugs,
+      // v1: persist multi-trade interests in asset_interests (trade slugs) — no schema change
+      asset_interests: industry_slugs,
       region_slug,
       delivery_cadence:
         internal === "predator" ? "instant" : internal === "monitor" ? "monthly" : "weekly",
@@ -60,7 +69,7 @@ export default async (req) => {
       pillar: internal,
       successUrl: `${base}/subscribe/?paid=${publicCode}`,
       cancelUrl: `${base}/subscribe/?canceled=1`,
-      profile: { industry_slug, region_slug },
+      profile: { industry_slug, industry_slugs, region_slug, asset_interests: industry_slugs },
     });
     return json(200, { url: session.url, session_id: session.id, product: publicCode });
   } catch (e) {

@@ -56,6 +56,7 @@ export async function createCheckoutSession({ email, pillar, successUrl, cancelU
   params.set("line_items[0][quantity]", "1");
   params.set("metadata[revenue_pillar]", pillar);
   if (p.industry_slug) params.set("metadata[industry_slug]", p.industry_slug);
+  if (p.industry_slugs?.length) params.set("metadata[industry_slugs]", p.industry_slugs.join(","));
   if (p.region_slug) params.set("metadata[region_slug]", p.region_slug);
 
   const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {

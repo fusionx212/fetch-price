@@ -30,18 +30,34 @@ export const REGION_SLUGS = new Set([
 const LEAD_SELECT =
   "id, company_number, industry_slug, region_slug, quality_tier, quality_score, quality_signals, created_at, sold_at, tle_companies(company_name, incorporated_on, company_status, registered_address, sic_codes)";
 
+function parseIndustrySlugs(input = {}) {
+  let raw = [];
+  if (Array.isArray(input.industry_slugs)) raw = input.industry_slugs;
+  else if (typeof input.industry_slugs === "string" && input.industry_slugs.trim()) {
+    raw = input.industry_slugs.split(/[,\s]+/);
+  } else if (input.industry_slug) raw = [input.industry_slug];
+  const fromAssets = (Array.isArray(input.asset_interests) ? input.asset_interests : []).filter((s) =>
+    TRADE_SLUGS.has(s)
+  );
+  return [...new Set([...raw, ...fromAssets].map((s) => String(s || "").trim()).filter((s) => TRADE_SLUGS.has(s)))];
+}
+
 export function normalizeProfile(input = {}) {
   const email = String(input.email || "")
     .trim()
     .toLowerCase();
-  const industry_slug = TRADE_SLUGS.has(input.industry_slug) ? input.industry_slug : null;
+  const industry_slugs = parseIndustrySlugs(input);
+  const industry_slug = industry_slugs[0] || (TRADE_SLUGS.has(input.industry_slug) ? input.industry_slug : null);
   const region_slug = REGION_SLUGS.has(input.region_slug) ? input.region_slug : "uk-all";
   const asset_interests = Array.isArray(input.asset_interests)
     ? input.asset_interests.filter(Boolean)
-    : [];
+    : industry_slugs.length
+      ? industry_slugs
+      : [];
   return {
     email,
     industry_slug,
+    industry_slugs,
     region_slug,
     asset_interests,
     delivery_cadence: input.delivery_cadence || "weekly",
@@ -50,7 +66,14 @@ export function normalizeProfile(input = {}) {
 }
 
 export function applyLeadFilters(q, profile) {
-  if (profile.industry_slug) q = q.eq("industry_slug", profile.industry_slug);
+  const slugs =
+    Array.isArray(profile.industry_slugs) && profile.industry_slugs.length
+      ? profile.industry_slugs
+      : profile.industry_slug
+        ? [profile.industry_slug]
+        : [];
+  if (slugs.length > 1) q = q.in("industry_slug", slugs);
+  else if (slugs.length === 1) q = q.eq("industry_slug", slugs[0]);
   if (profile.region_slug && profile.region_slug !== "uk-all") {
     q = q.eq("region_slug", profile.region_slug);
   }
@@ -128,10 +151,7 @@ export async function fetchMatchedDeaths(sb, profile, { since, limit = 20 } = {}
     .select("id, company_name, company_number, event_type, notice_published_at, industry_slug, region_slug, liquidation_estimated_gbp")
     .order("notice_published_at", { ascending: false })
     .limit(limit);
-  if (profile.industry_slug) q = q.eq("industry_slug", profile.industry_slug);
-  if (profile.region_slug && profile.region_slug !== "uk-all") {
-    q = q.eq("region_slug", profile.region_slug);
-  }
+  q = applyLeadFilters(q, profile);
   if (since) q = q.gte("notice_published_at", since);
   const { data, error } = await q;
   if (error) throw error;

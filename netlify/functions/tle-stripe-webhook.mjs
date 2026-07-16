@@ -29,11 +29,17 @@ export default async (req) => {
     const email = (s.customer_email || s.customer_details?.email || "").toLowerCase();
 
     if (email) {
+      const industry_slugs = s.metadata?.industry_slugs || s.metadata?.industry_slug || null;
       await upsertSubscriberProfile(sb, {
         email,
         industry_slug: s.metadata?.industry_slug || null,
+        industry_slugs,
+        asset_interests: typeof industry_slugs === "string"
+          ? industry_slugs.split(",").map((x) => x.trim()).filter(Boolean)
+          : undefined,
         region_slug: s.metadata?.region_slug || "uk-all",
-        delivery_cadence: pillar === "monitor" ? "monthly" : "instant",
+        delivery_cadence:
+          pillar === "monitor" ? "monthly" : pillar === "vulture" ? "weekly" : "instant",
         is_free_list: false,
       });
     }
@@ -41,6 +47,7 @@ export default async (req) => {
     if (pillar === "predator" && s.mode === "payment" && email) {
       await fulfillPredatorPurchase(sb, email, {
         industry_slug: s.metadata?.industry_slug,
+        industry_slugs: s.metadata?.industry_slugs,
         region_slug: s.metadata?.region_slug,
       }, s.id);
     } else if (s.mode === "subscription") {
