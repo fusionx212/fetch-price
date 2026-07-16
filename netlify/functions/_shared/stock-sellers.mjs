@@ -90,13 +90,7 @@ export function suggestStockSellers(assetCategories = [], opts = {}) {
     .sort((a, b) => b.score - a.score || a.seller.name.localeCompare(b.seller.name));
 
   if (scored.length >= limit) {
-    return scored.slice(0, limit).map((r) => ({
-      id: r.seller.id,
-      name: r.seller.name,
-      url: r.seller.url,
-      blurb: r.seller.blurb,
-      matched_tags: r.overlap.slice(0, 4),
-    }));
+    return scored.slice(0, limit).map((r) => mapSeller(r.seller, r.overlap));
   }
 
   // Thin match: pad with general industrial portals so packs never feel empty
@@ -113,14 +107,21 @@ export function suggestStockSellers(assetCategories = [], opts = {}) {
 
   return padded.map((s) => {
     const overlap = (s.tags || []).filter((t) => wanted.has(t));
-    return {
-      id: s.id,
-      name: s.name,
-      url: s.url,
-      blurb: s.blurb,
-      matched_tags: overlap.slice(0, 4),
-    };
+    return mapSeller(s, overlap);
   });
+}
+
+function mapSeller(s, overlap = []) {
+  const out = {
+    id: s.id,
+    name: s.name,
+    url: s.url,
+    blurb: s.blurb,
+    matched_tags: (overlap || []).slice(0, 4),
+  };
+  if (s.calendar_url) out.calendar_url = s.calendar_url;
+  if (s.next_sale_note) out.next_sale_note = s.next_sale_note;
+  return out;
 }
 
 /**

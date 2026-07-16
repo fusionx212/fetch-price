@@ -4,6 +4,7 @@
  */
 import { leadToCustomerRow, whyMatched } from "./match.mjs";
 import { suggestStockSellers } from "./stock-sellers.mjs";
+import { buildPublicTaps } from "./company-resolve.mjs";
 
 const FROM =
   process.env.RESEND_FROM || "Regional Commerce Data <brief@regionalcommercedata.co.uk>";
@@ -189,7 +190,13 @@ export function renderLeadPurchaseEmail(lead, profile) {
     <p style="margin:0 0 4px;color:${MUTED}">Matched to <strong>${esc(trade || "your trade")}</strong> · ${esc(region)}</p>
     <p style="margin:0 0 8px;font-size:13px;color:${MUTED}">Proof: incorporated ${esc(fmtDate(row.incorporated_on))} · we listed ${esc(fmtDate(row.listed_at))}</p>
     ${leadCard(row)}
-    <p style="margin:0 0 16px;color:${MUTED}">Look this firm up on Companies House or your usual sources. <strong>You</strong> decide how to make contact — we don't distribute personal phone numbers.</p>
+    <p style="margin:0 0 12px;color:${MUTED}">Look this firm up on Companies House or your usual sources. <strong>You</strong> decide how to make contact — we don't distribute personal phone numbers.</p>
+    ${publicTapsHtml({
+      company_number: row.company_number,
+      company_name: row.company_name,
+      sic_codes: row.sic_codes || [],
+    })}
+    <p style="margin:16px 0 8px">${btn(actUrl({ company_number: row.company_number, company_name: row.company_name, kind: "lead", sic: row.sic_codes || [] }), "Open side flow workbench")}</p>
     <p style="margin:0 0 8px">${btn(`${SITE}/subscribe/?product=leads`, "Buy another matched lead — £5")}</p>
     <p style="margin:12px 0 0;font-size:13px;color:${MUTED}"><a href="${SITE}/packs/" style="color:${BRAND}">Dealers: weekly product packs — ${ALERTS_PRICE} →</a></p>
   `,
@@ -278,6 +285,34 @@ function valuationBandsHtml(valuations = []) {
     .join("");
 }
 
+function actUrl({ company_number, company_name, kind = "lead", sic = "" }) {
+  const params = new URLSearchParams();
+  if (company_number) params.set("n", company_number);
+  if (company_name) params.set("name", company_name);
+  if (kind) params.set("kind", kind);
+  if (sic) params.set("sic", Array.isArray(sic) ? sic.join(",") : String(sic));
+  return `${SITE}/packs/act/?${params}`;
+}
+
+function publicTapsHtml({ company_number, company_name, sic_codes = [] }) {
+  const taps = buildPublicTaps({ company_number, company_name, sic_codes });
+  const rows = [taps.companies_house, taps.peers, taps.website, taps.contact]
+    .filter((t) => t?.url)
+    .map(
+      (t) =>
+        `<a href="${esc(t.url)}" style="display:inline-block;margin:0 8px 8px 0;padding:8px 10px;background:#eef4f8;border:1px solid #d5dce3;color:${INK};text-decoration:none;font-size:13px;font-weight:600">${esc(t.label)} →</a>`
+    )
+    .join("");
+  const work = actUrl({
+    company_number,
+    company_name,
+    kind: "pack",
+    sic: sic_codes,
+  });
+  return `<p style="margin:10px 0 0">${rows}</p>
+    <p style="margin:6px 0 0"><a href="${esc(work)}" style="color:${BRAND};font-weight:600;font-size:13px">Work this lead in side flow →</a></p>`;
+}
+
 function distressCardHtml(d) {
   const trade = (d.industry_slug || "").replace(/-/g, " ") || "—";
   const region = (d.region_slug || "").replace(/-/g, " ") || "—";
@@ -286,6 +321,7 @@ function distressCardHtml(d) {
     d.liquidation_estimated_gbp != null
       ? `£${Number(d.liquidation_estimated_gbp).toLocaleString("en-GB")}`
       : null;
+  const sic = (d.sic_codes || d.valuations?.[0]?.sic_codes || []).slice(0, 2);
   return `<tr><td style="padding:16px 12px;border-top:1px solid #e5e9ee;border-left:4px solid #c45c26;background:#fffaf7">
     <p style="margin:0 0 4px;font-size:11px;color:#c45c26;font-weight:700;letter-spacing:0.05em">${esc((d.event_type || "distress").toUpperCase())}</p>
     <p style="margin:0 0 10px;font-family:Georgia,serif;font-size:19px;line-height:1.25;color:${INK}">${esc(d.company_name)}</p>
@@ -306,6 +342,11 @@ function distressCardHtml(d) {
         ? `<p style="margin:12px 0 0"><a class="btnm" href="${esc(ch)}" style="display:inline-block;background:${BRAND};color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 14px">Open on Companies House →</a></p>`
         : ""
     }
+    ${publicTapsHtml({
+      company_number: d.company_number,
+      company_name: d.company_name,
+      sic_codes: sic,
+    })}
   </td></tr>`;
 }
 
@@ -336,6 +377,11 @@ function birthCardHtml(lead, i) {
         ? `<p style="margin:10px 0 0"><a href="${esc(ch)}" style="color:${BRAND};font-weight:600;font-size:14px">Companies House →</a></p>`
         : ""
     }
+    ${publicTapsHtml({
+      company_number: row.company_number,
+      company_name: row.company_name,
+      sic_codes: row.sic_codes || [],
+    })}
   </td></tr>`;
 }
 
@@ -369,10 +415,18 @@ function sellerListHtml(sellers) {
         .slice(0, 4)
         .map((t) => String(t).replace(/-/g, " "))
         .join(" · ");
+      const cal = s.calendar_url
+        ? `<p style="margin:6px 0 0"><a href="${esc(s.calendar_url)}" style="color:${BRAND};font-weight:600;font-size:13px">Seller calendar →</a>${
+            s.next_sale_note
+              ? ` <span style="color:${MUTED};font-size:12px">· ${esc(s.next_sale_note)}</span>`
+              : ""
+          }</p>`
+        : `<p style="margin:6px 0 0;font-size:12px;color:${MUTED}">No sale dates on file — <a href="${esc(s.url)}" style="color:${BRAND}">check seller site</a> for upcoming auctions.</p>`;
       return `<tr><td style="padding:10px 0;border-top:1px solid #e5e9ee">
       <a class="btnm" href="${esc(s.url)}" style="display:block;background:#eef4f8;border:1px solid #d5dce3;color:${INK};text-decoration:none;font-weight:600;font-size:15px;padding:14px 14px;margin:0 0 6px">${esc(s.name)} →</a>
       <p style="margin:0 0 4px;font-size:13px;color:${MUTED}">${esc(s.blurb || "")}</p>
       ${tags ? `<p style="margin:0;font-size:12px;color:${BRAND};font-weight:600">Matched tags: ${esc(tags)}</p>` : ""}
+      ${cal}
     </td></tr>`;
     })
     .join("");
@@ -461,7 +515,9 @@ export function renderProductPackEmail({
     ${nextActionsHtml({ distressN: distress.length, birthN: births.length, sellers })}
 
     <p style="margin:24px 0 10px">${btn(`${SITE}/packs/view/`, "Open phone digest")}</p>
+    <p style="margin:0 0 8px"><a class="btnm" href="${SITE}/packs/act/" style="display:inline-block;color:${BRAND};font-weight:600">Work one lead (side flow) →</a></p>
     <p style="margin:0 0 8px"><a class="btnm" href="${SITE}/packs/" style="display:inline-block;color:${BRAND};font-weight:600">Packs sell page →</a></p>
+    <p style="margin:12px 0 0;font-size:13px;color:${MUTED}">Need one birth row only? <a href="${SITE}/subscribe/?product=leads" style="color:${BRAND}">£5 matched lead</a> · not the weekly pack.</p>
     <p style="margin:12px 0 0;font-size:13px;color:${MUTED}"><a href="https://fetch-price.com/methodology.html" style="color:${BRAND}">How Fetch Price spreads work →</a></p>
   `,
   });
