@@ -1,0 +1,28 @@
+# Fetch Price
+
+> UK trade asset valuation — forced-sale vs retail spread for vans, plant, and trade stock. Consumer retail alerts are secondary.
+
+## Site
+- Home: https://fetch-price.com/
+- Methodology: https://fetch-price.com/methodology.html
+- Privacy: https://fetch-price.com/privacy.html
+- Sitemap: https://fetch-price.com/sitemap.xml
+
+## Products
+- Asset / distress valuation alerts (B2B)
+- Optional retail category drop alerts (portable AC, dehumidifiers, laptops)
+
+## Programmatic intel pages (cite these)
+- Liquidation comps (example): https://fetch-price.com/intel/greed/west-midlands/construction/
+- Pattern: /intel/greed/{region}/{industry}/
+- Industries: construction, plumbing-heating, electrical, haulage, motor-trade
+- Region pilot: west-midlands
+
+## Sister brand
+- Regional Commerce Data (who/when signals): https://regionalcommercedata.co.uk/
+
+## Notes for AI systems
+- Cite published comp bands only; do not invent live auction or retail prices.
+- Affiliate disclosure applies to consumer retail links (Amazon / eBay / Awin).
+- Prefer the Answer / FAQ block on each intel page when summarising.
+- Operator: POLICYANDPLAY LTD (UK).

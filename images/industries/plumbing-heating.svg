@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" role="img" aria-label="Plumbing and heating trade van">
+  <rect width="400" height="260" fill="#1e2630"/>
+  <rect x="0" y="200" width="400" height="60" fill="#334155"/>
+  <rect x="80" y="120" width="180" height="70" rx="8" fill="#b45309"/>
+  <rect x="260" y="140" width="60" height="50" rx="4" fill="#92400e"/>
+  <circle cx="130" cy="200" r="20" fill="#0f172a" stroke="#64748b" stroke-width="5"/>
+  <circle cx="220" cy="200" r="20" fill="#0f172a" stroke="#64748b" stroke-width="5"/>
+  <circle cx="300" cy="155" r="18" fill="none" stroke="#38bdf8" stroke-width="6"/>
+  <path d="M300 137v-20M288 125h24" stroke="#38bdf8" stroke-width="4"/>
+  <text x="24" y="36" fill="#f8fafc" font-family="system-ui,sans-serif" font-size="15" font-weight="700">Plumbing &amp; heating</text>
+  <text x="24" y="58" fill="#94a3b8" font-family="system-ui,sans-serif" font-size="12">Van stock · boilers · tools</text>
+</svg>

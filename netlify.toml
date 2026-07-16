@@ -1,0 +1,32 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+  # Credit guard: ignore rebuilds with no content change unless build hook
+  ignore = "[ -z \"$INCOMING_HOOK_TITLE\" ] || git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- ."
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.netlify.app https://*.netlify.com https://*.supabase.co; base-uri 'self'; form-action 'self'"
+
+[[redirects]]
+  from = "/intel/*"
+  to = "/intel/:splat.html"
+  status = 200
+
+
+[[redirects]]
+  from = "/subscribe"
+  to = "/#alerts"
+  status = 302
