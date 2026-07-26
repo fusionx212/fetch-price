@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=64.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "fetch-price"
+version = "1.0.0"
+description = "Agent-native marketplace for affiliate commerce. Search products across Amazon, eBay, Booking.com, and Expedia."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = ["requests>=2.28"]
+
+[project.urls]
+Homepage = "https://fetch-price.com"
+Repository = "https://github.com/fusionx212/fetch-price"
