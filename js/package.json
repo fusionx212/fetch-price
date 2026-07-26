@@ -1,0 +1,10 @@
+{
+  "name": "fetch-price",
+  "version": "1.0.0",
+  "description": "Agent-native marketplace for affiliate commerce. Search products across Amazon, eBay, Booking.com, and Expedia.",
+  "main": "index.js",
+  "type": "module",
+  "repository": "github:fusionx212/fetch-price",
+  "keywords": ["affiliate", "commerce", "ai-agent", "product-search", "a2a"],
+  "license": "MIT"
+}
