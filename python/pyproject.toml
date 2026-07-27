@@ -1,11 +1,11 @@
 [build-system]
 requires = ["setuptools>=64.0"]
-build-backend = "setuptools.backends._legacy:_Backend"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "fetch-price"
 version = "1.0.0"
-description = "Agent-native marketplace for affiliate commerce. Search products across Amazon, eBay, Booking.com, and Expedia."
+description = "Live UK marketplace product search for AI agents. eBay UK live via Browse API; Amazon UK rolling out. Normalised JSON, affiliate links included."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.9"

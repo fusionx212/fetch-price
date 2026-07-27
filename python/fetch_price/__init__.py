@@ -19,14 +19,16 @@ class QueryResult:
 
 class FetchPrice:
     def __init__(self, api_key: Optional[str] = None, base_url: str = DEFAULT_BASE):
+        # Keyless works on the free tier (50 lookups/month) — a key raises limits and enables BYOK
         self.api_key = api_key or os.getenv("FETCH_PRICE_API_KEY")
-        if not self.api_key: raise ValueError("Set FETCH_PRICE_API_KEY or pass api_key=")
         self.base_url = base_url.rstrip("/")
         self._session = requests.Session()
-        self._session.headers.update({"X-API-Key": self.api_key, "Content-Type": "application/json"})
+        self._session.headers.update({"Content-Type": "application/json"})
+        if self.api_key: self._session.headers.update({"X-API-Key": self.api_key})
     
     def search(self, query: str, max_results: int = 5, networks: Optional[List[str]] = None, currency: str = "GBP", min_price: Optional[float] = None, max_price: Optional[float] = None) -> QueryResult:
-        payload = {"query": query, "max_results": max_results, "networks": networks or [], "currency": currency}
+        payload = {"query": query, "max_results": max_results, "currency": currency}
+        if networks: payload["networks"] = networks
         if min_price is not None: payload["min_price"] = min_price
         if max_price is not None: payload["max_price"] = max_price
         r = self._session.post(f"{self.base_url}/api/query", json=payload); r.raise_for_status()
