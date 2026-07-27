@@ -1,1 +1,12 @@
-{"name":"fetch-price","version":"1.0.0","description":"Agent-native marketplace for affiliate commerce","main":"index.js","type":"module","repository":"github:fusionx212/fetch-price","keywords":["affiliate","commerce","ai-agent","product-search","a2a"],"license":"MIT"}
+{
+  "name": "fetch-price",
+  "version": "1.0.1",
+  "description": "Live UK marketplace product search for AI agents. eBay UK live via Browse API; Amazon UK rolling out. Normalised JSON, affiliate links included.",
+  "main": "index.js",
+  "type": "module",
+  "repository": "github:fusionx212/fetch-price",
+  "homepage": "https://fetch-price.com/docs",
+  "keywords": ["affiliate", "commerce", "ai-agent", "product-search", "a2a", "mcp", "ebay", "uk", "price-api"],
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}
