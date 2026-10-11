@@ -51,7 +51,14 @@ for p in results.products:
 | Pro | 5,000 | £29/mo |
 | Scale | Unlimited | £99/mo |
 
-Free tier works without authentication. Pro/Scale require an API key.
+Free tier works without authentication. Pro/Scale require an API key. Prices are what you pay: no VAT is charged.
+
+## Affiliate disclosure
+
+Purchase links are affiliate-tracked: fetch-price earns a commission if you buy through them,
+at no extra cost to you, and commission does not change result order. Show the `disclosure`
+text (MCP server and Python SDK return it) to end users next to the links.
+Full detail and privacy policy: [fetch-price.com/privacy](https://fetch-price.com/privacy).
 
 ## MCP Server
 

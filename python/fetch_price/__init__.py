@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 
 DEFAULT_BASE = "https://api.fetch-price.com"
+AFFILIATE_DISCLOSURE = "Affiliate links: fetch-price earns a commission if you buy through these links, at no extra cost to you. Details: https://fetch-price.com/privacy"
 
 @dataclass
 class Product:
@@ -14,6 +15,8 @@ class Product:
 @dataclass
 class QueryResult:
     products: List[Product]; query_ms: int; results_count: int
+    affiliate: bool = True
+    disclosure: str = AFFILIATE_DISCLOSURE  # show this to the end user alongside the buy links
     def cheapest(self): return min(self.products, key=lambda p: p.price) if self.products else None
     def __repr__(self): return f"QueryResult({self.results_count} products, {self.query_ms}ms)"
 
@@ -34,7 +37,7 @@ class FetchPrice:
         r = self._session.post(f"{self.base_url}/api/query", json=payload); r.raise_for_status()
         data = r.json()
         products = [Product(name=p["product"], price=p["price"], currency=p.get("currency", currency), network=p["network"], url=p["url"], commission_estimate=p.get("commission_estimate"), metadata={k:v for k,v in p.items() if k not in ("product","price","currency","network","url","commission_estimate")}) for p in data.get("results", [])]
-        return QueryResult(products=products, query_ms=data.get("query_ms", 0), results_count=data.get("results_count", len(products)))
+        return QueryResult(products=products, query_ms=data.get("query_ms", 0), results_count=data.get("results_count", len(products)), affiliate=data.get("affiliate", True), disclosure=data.get("disclosure") or AFFILIATE_DISCLOSURE)
     
     def stats(self) -> dict:
         r = self._session.get(f"{self.base_url}/api/stats"); r.raise_for_status(); return r.json()

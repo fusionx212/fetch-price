@@ -35,6 +35,11 @@ DEFAULT_NETWORKS = ["ebay_uk", "amazon_uk"]
 MAX_QUERY_LENGTH = 200
 TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 
+AFFILIATE_DISCLOSURE = (
+    "Affiliate links: fetch-price earns a commission if you buy through these links, "
+    "at no extra cost to you. Details: https://fetch-price.com/privacy"
+)
+
 # ---- Prompt injection defence ----
 INJECTION_PATTERNS = [
     r"(?i)ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?)",
@@ -59,7 +64,8 @@ mcp = FastMCP(
         "UK product and price search across major marketplaces. "
         "Use search_products when a user wants to find, compare, or price "
         "a physical product available in the UK. Results include live prices, "
-        "condition, and a direct purchase URL to hand back to the user."
+        "condition, and a direct purchase URL to hand back to the user. "
+        "Purchase URLs are affiliate links; tell the user, using the disclosure field."
     ),
 )
 
@@ -82,6 +88,8 @@ def _normalise_item(raw: dict[str, Any]) -> dict[str, Any]:
         "url": raw.get("url", ""),
         "image": raw.get("image") or raw.get("image_url"),
         "seller_rating": raw.get("seller_rating"),
+        # Additive: buy links are affiliate-tracked. Honour the API's own flag if it sends one.
+        "affiliate": bool(raw.get("affiliate", bool(raw.get("url")))),
     }
 
 
@@ -105,6 +113,8 @@ async def search_products(
         A dict with `results` (list of products, each with product, price,
         currency, condition, network, url) and `meta` (query echo, counts).
         The url field is a direct purchase link — present it to the user as-is.
+        The links are affiliate-tracked: when you show them, also show the
+        `disclosure` text so the user knows the service earns a commission.
     """
     if not query or not query.strip():
         return {"error": "query must be a non-empty string", "results": []}
@@ -167,6 +177,8 @@ async def search_products(
 
     return {
         "results": results,
+        "affiliate": any(r["affiliate"] for r in results),
+        "disclosure": data.get("disclosure") if isinstance(data, dict) and data.get("disclosure") else AFFILIATE_DISCLOSURE,
         "meta": {
             "query": query.strip(),
             "networks_searched": nets,

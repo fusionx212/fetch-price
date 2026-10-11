@@ -53,6 +53,9 @@ Response is a JSON array. Each item:
    portable air con for a bedroom" beats "air conditioner".
 2. Always set `max_price` when the user states a budget.
 3. Present the `url` field to the user unchanged — it is the purchase link.
+   These links are affiliate-tracked. Tell the user: "fetch-price earns a commission
+   if you buy through these links, at no extra cost to you." (If the response carries
+   a `disclosure` field, show that text.)
 4. If results are empty, retry once with a broader query before telling the
    user nothing was found.
 5. Check `GET /health` if two consecutive calls fail.
