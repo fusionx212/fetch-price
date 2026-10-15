@@ -1,18 +1,21 @@
 /**
- * GET /api/tle/intel — free summary or paid matched company rows
+ * GET /api/tle/intel — free aggregate summary, or paid matched company rows
+ *
+ * The free tier is genuinely public (aggregate counts only, no identity), so it
+ * takes no email at all. Anything personalised requires a signed token: echoing
+ * a profile back for a caller-supplied ?email= was free customer enumeration.
  */
-import { getAdminClient, getSubscriberProfile, hasActiveSubscription, json, CORS } from "./_shared/access-gate.mjs";
-import { applyLeadFilters } from "./_shared/match.mjs";
+import { getAdminClient, getSubscriberProfile, hasActiveSubscription, identityFromRequest, json, CORS } from "./_shared/access-gate.mjs";
 
 export default async (req) => {
   if (req.method === "OPTIONS") return new Response("", { status: 200, headers: CORS });
   if (req.method !== "GET") return json(405, { error: "Method Not Allowed" });
 
   const url = new URL(req.url);
-  const email = url.searchParams.get("email")?.trim().toLowerCase();
   const region = url.searchParams.get("region") || "west-midlands";
   const sb = getAdminClient();
 
+  const email = identityFromRequest(req);
   const profile = email ? await getSubscriberProfile(email) : null;
   const matchRegion = profile?.region_slug && profile.region_slug !== "uk-all" ? profile.region_slug : region;
 
@@ -31,9 +34,19 @@ export default async (req) => {
     summary.push({ industry: ind.slug, label: ind.label, birth_count_7d: count || 0 });
   }
 
+  // Unauthenticated callers get aggregates only — never a profile, never rows
+  if (!email) {
+    return json(200, { tier: "free", region: matchRegion, summary });
+  }
+
   const monitor = await hasActiveSubscription(email, "monitor");
   if (!monitor) {
-    return json(200, { tier: "free", region: matchRegion, summary, profile: profile ? { industry_slug: profile.industry_slug, region_slug: profile.region_slug } : null });
+    return json(200, {
+      tier: "free",
+      region: matchRegion,
+      summary,
+      profile: profile ? { industry_slug: profile.industry_slug, region_slug: profile.region_slug } : null,
+    });
   }
 
   let q = sb
@@ -49,7 +62,13 @@ export default async (req) => {
 
   const { data: companies, error } = await q;
   if (error) return json(500, { error: error.message });
-  return json(200, { tier: "monitor", region: matchRegion, summary, companies, profile: { industry_slug: profile?.industry_slug, region_slug: profile?.region_slug } });
+  return json(200, {
+    tier: "monitor",
+    region: matchRegion,
+    summary,
+    companies,
+    profile: { industry_slug: profile?.industry_slug, region_slug: profile?.region_slug },
+  });
 };
 
 export const config = { path: "/api/tle/intel" };

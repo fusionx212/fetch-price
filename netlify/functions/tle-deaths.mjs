@@ -1,14 +1,16 @@
 /**
- * GET /api/tle/deaths — matched distress signals (paid gate)
+ * GET /api/tle/deaths — matched distress signals (paid gate, token identity)
  */
-import { getAdminClient, getSubscriberProfile, hasActiveSubscription, json, CORS } from "./_shared/access-gate.mjs";
+import { getAdminClient, getSubscriberProfile, hasActiveSubscription, identityFromRequest, unauthorized, json, CORS } from "./_shared/access-gate.mjs";
 import { fetchMatchedDeaths } from "./_shared/match.mjs";
 
 export default async (req) => {
   if (req.method === "OPTIONS") return new Response("", { status: 200, headers: CORS });
   if (req.method !== "GET") return json(405, { error: "Method Not Allowed" });
 
-  const email = new URL(req.url).searchParams.get("email")?.trim().toLowerCase();
+  const email = identityFromRequest(req);
+  if (!email) return unauthorized();
+
   if (!(await hasActiveSubscription(email, "vulture"))) {
     return json(402, { error: "Alerts subscription required", pillar: "vulture" });
   }

@@ -1,15 +1,16 @@
 /**
- * GET /api/tle/valuations — Fetch-Price liquidation comps (vulture gate)
+ * GET /api/tle/valuations — liquidation comps (vulture gate, token identity)
  */
-import { getAdminClient, hasActiveSubscription, json, CORS } from "./_shared/access-gate.mjs";
+import { getAdminClient, hasActiveSubscription, identityFromRequest, unauthorized, json, CORS } from "./_shared/access-gate.mjs";
 
 export default async (req) => {
   if (req.method === "OPTIONS") return new Response("", { status: 200, headers: CORS });
   if (req.method !== "GET") return json(405, { error: "Method Not Allowed" });
 
-  const url = new URL(req.url);
-  const email = url.searchParams.get("email")?.trim().toLowerCase();
-  const industry = url.searchParams.get("industry");
+  const email = identityFromRequest(req);
+  if (!email) return unauthorized();
+
+  const industry = new URL(req.url).searchParams.get("industry");
 
   if (!(await hasActiveSubscription(email, "vulture"))) {
     return json(402, { error: "Vulture subscription required", pillar: "vulture" });
