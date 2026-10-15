@@ -1,8 +1,74 @@
 /**
  * Server-side paywall gate — checks tle_subscriptions via service role.
+ *
+ * IDENTITY RULE (estate ACCESS-CONTROL LAW): paid data is scoped by a signed
+ * capability token, never by a caller-supplied ?email=. An email address is a
+ * public identifier — anyone can type a customer's address. The token is minted
+ * server-side and delivered only to the mailbox that owns it.
  */
+import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { normalizeProfile } from "./match.mjs";
+
+const TOKEN_TTL_DAYS = 90;
+
+function tokenSecret() {
+  const s = process.env.RCD_TOKEN_SECRET || process.env.CRON_SECRET || process.env.PIPELINE_SECRET;
+  if (!s) throw new Error("RCD_TOKEN_SECRET not configured");
+  return s;
+}
+
+const b64url = (buf) => Buffer.from(buf).toString("base64url");
+
+function sign(payload) {
+  return crypto.createHmac("sha256", tokenSecret()).update(payload).digest("base64url");
+}
+
+/** Mint a capability token for an email. Deliver by email ONLY — never in an API response. */
+export function mintAccessToken(email, ttlDays = TOKEN_TTL_DAYS) {
+  const addr = String(email || "").trim().toLowerCase();
+  if (!addr) throw new Error("email required");
+  const exp = Date.now() + ttlDays * 86400000;
+  const payload = `${b64url(addr)}.${exp}`;
+  return `${payload}.${sign(payload)}`;
+}
+
+/** Verify a token and return its email, or null. Constant-time signature compare. */
+export function verifyAccessToken(token) {
+  if (!token || typeof token !== "string") return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  const [emailPart, expPart, sig] = parts;
+  const expected = sign(`${emailPart}.${expPart}`);
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  const exp = Number(expPart);
+  if (!Number.isFinite(exp) || Date.now() > exp) return null;
+  try {
+    return Buffer.from(emailPart, "base64url").toString("utf8").toLowerCase() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The ONLY way a request may claim an identity. Accepts ?token= or
+ * `Authorization: Bearer <token>`. Returns null when absent/invalid — callers
+ * must treat null as unauthenticated, never fall back to a query-param email.
+ */
+export function identityFromRequest(req) {
+  const url = new URL(req.url);
+  const bearer = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  return verifyAccessToken(url.searchParams.get("token") || bearer || "");
+}
+
+export function unauthorized(reason = "Access token required") {
+  return json(401, {
+    error: reason,
+    how: "Request a sign-in link at https://regionalcommercedata.co.uk/api/tle/access-link (POST {email}) — the link is emailed to you.",
+  });
+}
 
 export function getAdminClient() {
   const url = process.env.SUPABASE_URL;
