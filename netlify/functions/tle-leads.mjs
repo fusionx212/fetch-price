@@ -1,16 +1,19 @@
 /**
- * GET /api/tle/leads — matched leads purchased by this email
+ * GET /api/tle/leads — matched leads purchased by the token holder
+ *
+ * Identity comes from a signed capability token ONLY. An ?email= parameter is
+ * never trusted: it is a public identifier, so honouring it would hand any
+ * stranger the leads a customer paid for.
  */
-import { getAdminClient, getSubscriberProfile, json, CORS } from "./_shared/access-gate.mjs";
-import { applyLeadFilters, leadToCustomerRow } from "./_shared/match.mjs";
+import { getAdminClient, getSubscriberProfile, identityFromRequest, unauthorized, json, CORS } from "./_shared/access-gate.mjs";
+import { leadToCustomerRow } from "./_shared/match.mjs";
 
 export default async (req) => {
   if (req.method === "OPTIONS") return new Response("", { status: 200, headers: CORS });
   if (req.method !== "GET") return json(405, { error: "Method Not Allowed" });
 
-  const url = new URL(req.url);
-  const email = url.searchParams.get("email")?.trim().toLowerCase();
-  if (!email) return json(400, { error: "email required" });
+  const email = identityFromRequest(req);
+  if (!email) return unauthorized();
 
   const sb = getAdminClient();
 
@@ -39,6 +42,7 @@ export default async (req) => {
     return json(200, { tier: "purchased", email, leads: rows });
   }
 
+  // Authenticated but nothing bought yet — safe to echo their own profile back
   return json(402, {
     error: "No matched leads yet — buy one for £5",
     checkout: "https://regionalcommercedata.co.uk/subscribe/?product=leads",
