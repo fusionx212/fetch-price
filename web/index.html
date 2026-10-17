@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>fetch-price — Commerce Infrastructure for Humans &amp; AI Agents</title>
+<meta name="description" content="Live UK product pricing for AI agents. eBay UK live via Browse API, Amazon UK rolling out. One REST API, normalised JSON, affiliate links included.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+
+<!-- Agent discovery -->
+<link rel="a2a" type="application/json" href="/.well-known/agent-card.json">
+<link rel="llms" type="text/plain" href="/llms.txt">
+<link rel="sitemap" type="application/xml" href="/sitemap.xml">
+
+<!-- OpenGraph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="fetch-price — Commerce Infrastructure for Humans &amp; AI Agents">
+<meta property="og:description" content="Live UK marketplace pricing for humans and AI agents. eBay UK live, Amazon UK rolling out. Agent API available.">
+<meta property="og:url" content="https://fetch-price.com">
+<meta property="og:site_name" content="fetch-price">
+<meta property="og:locale" content="en_GB">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="fetch-price — Commerce Infrastructure">
+<meta name="twitter:description" content="Live UK product pricing for AI agents. eBay UK live, Amazon UK rolling out.">
+
+<!-- Agent canonical -->
+<link rel="canonical" href="https://fetch-price.com">
+
+<!-- Structured data: Organization -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "fetch-price",
+  "url": "https://fetch-price.com",
+  "description": "Commerce infrastructure platform with live product pricing and an agent-first API for affiliate commerce.",
+  "sameAs": ["https://github.com/fusionx212/fetch-price"],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "contact@fetch-price.com",
+    "contactType": "customer service"
+  },
+  "offers": {
+    "@type": "OfferCatalog",
+    "name": "Agent API Plans",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "name": "Free",
+        "price": "0",
+        "priceCurrency": "GBP",
+        "description": "50 lookups/month"
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro",
+        "price": "29",
+        "priceCurrency": "GBP",
+        "description": "5000 lookups/month + priority routing"
+      },
+      {
+        "@type": "Offer",
+        "name": "Scale",
+        "price": "99",
+        "priceCurrency": "GBP",
+        "description": "Unlimited + API access + white-label"
+      }
+    ]
+  }
+}
+</script>
+
+<!-- Structured data: FAQ (AEO/GEO optimized) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is fetch-price?",
+      "acceptedAnswer": {"@type": "Answer","text": "fetch-price is a commerce infrastructure platform providing live UK marketplace pricing for both human shoppers and AI agents via a REST API. eBay UK is live via the Browse API; Amazon UK is rolling out."}
+    },
+    {
+      "@type": "Question",
+      "name": "How do AI agents use fetch-price?",
+      "acceptedAnswer": {"@type": "Answer","text": "AI agents send one POST request with a product name and receive structured results with price, affiliate URL, and commission estimates. Agents can register their own affiliate tags. Free tier: 50 lookups/month."}
+    },
+    {
+      "@type": "Question",
+      "name": "Which networks does fetch-price support?",
+      "acceptedAnswer": {"@type": "Answer","text": "eBay UK (EPN) is live with full Browse API item data — real prices, conditions and affiliate-tracked item links. Amazon UK (Associates) is rolling out. Further networks added based on demand."}
+    },
+    {
+      "@type": "Question",
+      "name": "How do AI agents discover fetch-price?",
+      "acceptedAnswer": {"@type": "Answer","text": "Through the A2A protocol (agent-card.json), llms.txt for LLM crawlers, ClawHub skill registry, and skills.sh directory. Structured data enables discovery by Google AI and Apple Intelligence."}
+    }
+  ]
+}
+</script>
+
+<style>
+/* === DESIGN-SPEC: "Trading Terminal Infrastructure" ===
+   North star: Bloomberg Terminal × Stripe API docs
+   Palette: dark base, emerald primary, tonal surface ramp, no glow
+   Type: Space Grotesk + JetBrains Mono, tabular nums
+   Layout: asymmetric 12-col, terminal code blocks, data tables
+   Elevation: tonal layering, 1px borders, NO shadows/glow
+   Motion: CSS view() timeline, 150ms hover
+   Spacing: 4px unit, 80px section-gap */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --base: #06080b;
+  --s1: #0a0d12;
+  --s2: #0e1118;
+  --s3: #131720;
+  --s4: #181c28;
+  --s5: #1e2230;
+  --on-s: #d1d5db;
+  --on-s-muted: #94a3b8;
+  --on-s-dim: #64748b;
+  --p: #10b981;
+  --p-bright: #34d399;
+  --on-p: #022c22;
+  --p-subtle: rgba(16,185,129,.08);
+  --outline: #1e293b;
+  --outline-hi: #334155;
+  --radius: 4px;
+  --radius-card: 8px;
+  --unit: 4px;
+  --gap: 80px;
+  --measure: 65ch;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', monospace;
+  --col-max: 1280px;
+  --grid: 12;
+}
+
+html{background:var(--base);color:var(--on-s);font-family:var(--font-display);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{overflow-x:hidden}
+
+/* === Layout === */
+.container{max-width:var(--col-max);margin:0 auto;padding:0 24px}
+.grid{display:grid;grid-template-columns:repeat(var(--grid),1fr);gap:24px}
+
+/* === Header === */
+.header{position:sticky;top:0;z-index:50;background:rgba(6,8,11,.85);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--outline)}
+.header>.container{display:flex;align-items:center;justify-content:space-between;height:56px}
+
+.logo{font-family:var(--font-mono);font-size:16px;font-weight:500;color:var(--p-bright);text-decoration:none;letter-spacing:-.01em}
+.logo span{color:var(--on-s)}
+
+.nav{display:flex;gap:32px;list-style:none}
+.nav a{color:var(--on-s-muted);text-decoration:none;font-size:14px;font-weight:500;transition:color .15s}
+.nav a:hover{color:var(--on-s)}
+
+/* === Hero === */
+.hero{padding:120px 0 80px}
+.hero h1{font-size:clamp(2.5rem,5vw,4rem);font-weight:700;line-height:1.08;letter-spacing:-.025em;color:#fff;max-width:11ch}
+.hero h1 em{font-style:normal;color:var(--p-bright)}
+.hero .standfirst{font-size:18px;color:var(--on-s-muted);line-height:1.55;max-width:52ch;margin-top:24px}
+
+.hero-code{background:var(--s2);border:1px solid var(--outline-hi);border-radius:var(--radius-card);overflow:hidden;font-family:var(--font-mono);font-size:13px;line-height:1.7}
+.hero-code-bar{background:var(--s3);padding:8px 16px;border-bottom:1px solid var(--outline);color:var(--on-s-dim);font-size:12px}
+.hero-code pre{padding:20px;margin:0;overflow-x:auto;white-space:pre;color:var(--on-s)}
+.hero-code .key{color:var(--on-s-dim)}
+.hero-code .str{color:var(--p-bright)}
+.hero-code .num{color:#93c5fd}
+
+/* === Sections === */
+.section{padding:var(--gap) 0}
+.section-label{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--p);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+
+.section h2{font-size:clamp(1.75rem,3vw,2.25rem);font-weight:700;letter-spacing:-.015em;color:#fff;line-height:1.15;margin-bottom:16px}
+.section p{color:var(--on-s-muted);max-width:var(--measure);font-size:16px;line-height:1.6}
+
+/* === Bento grid === */
+.bento{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.bento>*{background:var(--s2);border:1px solid var(--outline);border-radius:var(--radius-card);padding:28px}
+.bento .stat{padding:20px 24px}
+.bento .stat .value{font-family:var(--font-mono);font-size:clamp(1.5rem,2vw,2rem);font-weight:500;color:var(--p-bright);font-variant-numeric:tabular-nums}
+.bento .stat .label{font-size:13px;color:var(--on-s-dim);margin-top:4px}
+
+/* === Pricing table === */
+.pricing{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
+.pricing th{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--on-s-dim);text-align:left;padding:12px 16px;border-bottom:1px solid var(--outline);font-weight:500}
+.pricing td{padding:16px;border-bottom:1px solid var(--outline);font-size:14px}
+.pricing .price{font-family:var(--font-mono);font-size:18px;font-weight:500;color:var(--p-bright)}
+.pricing tr:hover td{background:var(--p-subtle)}
+
+/* === CTA buttons === */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:var(--radius);font-family:var(--font-display);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s;border:none}
+.btn-primary{background:var(--p);color:var(--on-p)}
+.btn-primary:hover{background:var(--p-bright);transform:translateY(-1px)}
+.btn-secondary{background:transparent;color:var(--on-s);border:1px solid var(--outline-hi)}
+.btn-secondary:hover{background:var(--s3);border-color:var(--on-s-dim)}
+.btn-lg{padding:14px 32px;font-size:16px}
+
+/* === Footer === */
+.footer{border-top:1px solid var(--outline);padding:48px 0;color:var(--on-s-dim);font-size:13px}
+.footer .container{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}
+
+/* === Responsive === */
+@media (max-width:768px){
+  .grid{grid-template-columns:1fr}
+  .bento{grid-template-columns:1fr 1fr}
+  .pricing{font-size:13px}
+  .hero{padding:80px 0 48px}
+  .nav{display:none}
+  .section{padding:48px 0}
+}
+
+/* === Agent API section accent === */
+.bg-api{background:var(--s1);border-top:1px solid var(--outline);border-bottom:1px solid var(--outline)}
+
+/* === view() reveal === */
+@supports (animation-timeline:view()){
+  .reveal{animation:reveal linear both;animation-timeline:view();animation-range:entry 0% entry 100%}
+  @keyframes reveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+}
+@media (prefers-reduced-motion){.reveal{animation:none;opacity:1}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container">
+    <a href="/" class="logo">fp<span>.com</span></a>
+    <nav>
+      <ul class="nav">
+        <li><a href="/docs">Docs</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#api">API</a></li>
+        <li><a href="/.well-known/agent-card.json">Agent Card</a></li>
+        <li><a href="/llms.txt">llms.txt</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="grid">
+      <div style="grid-column:span 7">
+        <h1>Commerce infrastructure for <em>humans</em> and <em>agents</em></h1>
+        <p class="standfirst">Live UK marketplace pricing — eBay UK live today, Amazon UK rolling out. Browse as a human. Query as an agent. One API, normalised JSON, affiliate links included.</p>
+        <div style="display:flex;gap:12px;margin-top:28px">
+          <a href="#pricing" class="btn btn-primary btn-lg">View Plans</a>
+          <a href="/docs" class="btn btn-secondary btn-lg">API Docs</a>
+        </div>
+      </div>
+      <div style="grid-column:span 5">
+        <div class="hero-code reveal">
+          <div class="hero-code-bar">POST /api/query — live response</div>
+          <pre><span class="key">curl</span> -X POST https://api.fetch-price.com/api/query \
+  -d <span class="str">'{"query":"portable air conditioner","max_price":300,"networks":["ebay_uk"]}'</span>
+
+<span class="key">→</span> {
+  <span class="str">"results"</span>: [
+    {<span class="str">"product"</span>: <span class="str">"5460BTU Remote Control Portable Air Conditioner"</span>,
+     <span class="str">"price"</span>: <span class="num">275.99</span>,
+     <span class="str">"currency"</span>: <span class="str">"GBP"</span>,
+     <span class="str">"condition"</span>: <span class="str">"New"</span>,
+     <span class="str">"network"</span>: <span class="str">"ebay_uk"</span>,
+     <span class="str">"result_type"</span>: <span class="str">"item"</span>,
+     <span class="str">"url"</span>: <span class="str">"https://www.ebay.co.uk/itm/358845422976?..."</span>}
+  ]
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BENTO -->
+<section class="section reveal">
+  <div class="container">
+    <div class="bento">
+      <div class="stat" style="grid-column:span 2">
+        <div class="value">eBay UK</div>
+        <div class="label">Live now via Browse API — Amazon UK rolling out</div>
+      </div>
+      <div class="stat">
+        <div class="value">Live</div>
+        <div class="label">Real items, prices &amp; conditions — not links to search pages</div>
+      </div>
+      <div class="stat">
+        <div class="value">EPN</div>
+        <div class="label">Affiliate tracking on every returned link</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="section reveal">
+  <div class="container">
+    <div class="section-label">Pricing</div>
+    <h2>Built for agents, priced for scale</h2>
+    <p style="margin-bottom:24px">Every plan includes access to all networks. Start free. Scale when you're ready.</p>
+
+    <div style="overflow-x:auto">
+      <table class="pricing">
+        <thead>
+          <tr><th>Plan</th><th>Lookups/month</th><th>Networks</th><th>Priority</th><th>API Access</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="price">Free</td>
+            <td>50</td><td>All</td><td>—</td><td>REST</td>
+            <td><a href="/docs#get-key" class="btn btn-secondary" style="font-size:12px;padding:6px 14px">Start Free</a></td>
+          </tr>
+          <tr>
+            <td class="price">Pro — £29/mo</td>
+            <td>5,000</td><td>All</td><td>Priority</td><td>REST</td>
+            <td><a href="https://buy.stripe.com/7sY6oH5Yhasp86u5t5cbC1g" rel="noopener" class="btn btn-primary" style="font-size:12px;padding:6px 14px">Get Pro</a></td>
+          </tr>
+          <tr>
+            <td class="price">Scale — £99/mo</td>
+            <td>Unlimited</td><td>All</td><td>First</td><td>REST + WebSocket</td>
+            <td><a href="https://buy.stripe.com/8x23cvaex585dqOdZBcbC1h" rel="noopener" class="btn btn-primary" style="font-size:12px;padding:6px 14px">Get Scale</a></td>
+          </tr>
+          <tr>
+            <td class="price">Trade — £99/mo</td>
+            <td>Unlimited</td><td>All + Distressed</td><td>First</td><td>REST + CSV Export</td>
+            <td><!--email_off--><a href="mailto:contact@fetch-price.com?subject=fetch-price%20Trade" class="btn btn-secondary" style="font-size:12px;padding:6px 14px">Trade Access</a><!--/email_off--></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- AGENT API -->
+<section id="api" class="section bg-api reveal">
+  <div class="container">
+    <div class="section-label">Agent API</div>
+    <h2>Your AI talks to ours</h2>
+    <p style="margin-bottom:32px">One POST request. Every network. Affiliate links tracked and commission-routed. Discoverable via A2A protocol and llms.txt.</p>
+
+    <div class="grid" style="margin-bottom:32px">
+      <div style="grid-column:span 4">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--p);margin-bottom:8px">1. Register</div>
+        <code style="display:block;background:var(--s2);border:1px solid var(--outline);border-radius:var(--radius);padding:16px;font-family:var(--font-mono);font-size:12px;color:var(--on-s);white-space:pre-wrap">POST /api/agents/register
+{"name":"PriceScout",
+ "networks":{"amazon_uk":{"tag":"yours"}},
+ "endpoint":"https://you.com/api"}
+→ {"api_key":"fp_...","tier":"free"}</code>
+      </div>
+      <div style="grid-column:span 4">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--p);margin-bottom:8px">2. Query</div>
+        <code style="display:block;background:var(--s2);border:1px solid var(--outline);border-radius:var(--radius);padding:16px;font-family:var(--font-mono);font-size:12px;color:var(--on-s);white-space:pre-wrap">POST /api/query
+H: X-API-Key: fp_...
+{"query":"espresso machine",
+ "max_results":5,
+ "networks":["amazon_uk","ebay_uk"]}
+→ [{"product":"...","price":...}]</code>
+      </div>
+      <div style="grid-column:span 4">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--p);margin-bottom:8px">3. Discover</div>
+        <code style="display:block;background:var(--s2);border:1px solid var(--outline);border-radius:var(--radius);padding:16px;font-family:var(--font-mono);font-size:12px;color:var(--on-s);white-space:pre-wrap">GET /.well-known/agent-card.json
+GET /llms.txt
+GET /sitemap.xml
+
+Indexed by: A2A protocol,
+ClawHub, Google AI crawling</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW AGENTS FIND YOU -->
+<section class="section reveal">
+  <div class="container">
+    <div class="section-label">Agent Discovery</div>
+    <h2>How AI agents find fetch-price</h2>
+    <p style="margin-bottom:32px">No ads. No SEO grind. Your API is discoverable through the agent web — the same way websites were indexed in the 90s, but for AI.</p>
+
+    <div class="grid" style="margin-bottom:16px">
+      <div style="grid-column:span 4">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--p);margin-bottom:4px">agent-card.json</div>
+        <p style="font-size:14px;color:var(--on-s-muted);max-width:35ch">A2A protocol standard. 150+ organizations. Any AI agent that searches for services finds you automatically.</p>
+      </div>
+      <div style="grid-column:span 4">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--p);margin-bottom:4px">llms.txt</div>
+        <p style="font-size:14px;color:var(--on-s-muted);max-width:35ch">Machine-readable site overview. LLMs crawl this before deciding whether to use your API. Chappie/Cursor-style discovery.</p>
+      </div>
+      <div style="grid-column:span 4">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--p);margin-bottom:4px">Structured Data</div>
+        <p style="font-size:14px;color:var(--on-s-muted);max-width:35ch">JSON-LD + Schema.org markup. Google AI crawling, Apple Intelligence, and Alexa all consume this for product search.</p>
+      </div>
+      <div style="grid-column:span 4">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--p);margin-bottom:4px">ClawHub</div>
+        <p style="font-size:14px;color:var(--on-s-muted);max-width:35ch">Published: fetch-price v1.0.0. 13,700+ skills indexed. Agent ecosystem discovers you through skill registry.</p>
+      </div>
+      <div style="grid-column:span 4">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--p);margin-bottom:4px">Sitemap + RSS</div>
+        <p style="font-size:14px;color:var(--on-s-muted);max-width:35ch">Traditional crawl paths for Googlebot and AI scrapers. Product feeds in XML for automated ingestion.</p>
+      </div>
+      <div style="grid-column:span 4">
+        <div style="font-family:var(--font-mono);font-size:13px;color:var(--p);margin-bottom:4px">OpenGraph / Twitter</div>
+        <p style="font-size:14px;color:var(--on-s-muted);max-width:35ch">Social crawlers pick up rich previews. Every product page has OG tags. Link sharing drives discovery.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section reveal" style="text-align:center">
+  <div class="container">
+    <h2 style="text-align:center;max-width:20ch;margin:0 auto 12px">Infrastructure for the agent economy</h2>
+    <p style="text-align:center;margin:0 auto 32px">Free to start. No credit card. 50 lookups/month.</p>
+    <a href="/docs#get-key" class="btn btn-primary btn-lg">Start Free</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div>fetch-price · Commerce infrastructure · <a href="/.well-known/agent-card.json" style="color:var(--on-s-dim)">Agent Card</a></div>
+    <div><a href="/llms.txt" style="color:var(--on-s-dim)">llms.txt</a> · <a href="/sitemap.xml" style="color:var(--on-s-dim)">Sitemap</a> · AI-readable</div>
+  </div>
+</footer>
+</body>
+</html>

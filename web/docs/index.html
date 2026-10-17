@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>API Documentation — fetch-price</title>
+<meta name="description" content="fetch-price API documentation: product search endpoints, authentication, BYOK affiliate tags, MCP server install, rate limits and pricing.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://fetch-price.com/docs">
+<link rel="a2a" type="application/json" href="/.well-known/agent-card.json">
+<link rel="llms" type="text/plain" href="/llms.txt">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--base:#06080b;--s1:#0a0d12;--s2:#0e1118;--s3:#131720;--on-s:#d1d5db;--on-s-muted:#94a3b8;--on-s-dim:#64748b;--p:#10b981;--p-bright:#34d399;--on-p:#022c22;--p-subtle:rgba(16,185,129,.08);--outline:#1e293b;--outline-hi:#334155;--radius:4px;--radius-card:8px;--font-display:'Space Grotesk',system-ui,sans-serif;--font-mono:'JetBrains Mono','Cascadia Code',monospace;--col-max:960px}
+html{background:var(--base);color:var(--on-s);font-family:var(--font-display);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+.container{max-width:var(--col-max);margin:0 auto;padding:0 24px}
+.header{position:sticky;top:0;z-index:50;background:rgba(6,8,11,.85);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--outline)}
+.header>.container{display:flex;align-items:center;justify-content:space-between;height:56px}
+.logo{font-family:var(--font-mono);font-size:16px;font-weight:500;color:var(--p-bright);text-decoration:none}
+.logo span{color:var(--on-s)}
+.nav{display:flex;gap:24px;list-style:none}
+.nav a{color:var(--on-s-muted);text-decoration:none;font-size:14px;font-weight:500}
+.nav a:hover{color:var(--on-s)}
+main{padding:56px 0 96px}
+h1{font-size:clamp(2rem,4vw,2.75rem);font-weight:700;letter-spacing:-.02em;color:#fff;margin-bottom:12px}
+.standfirst{color:var(--on-s-muted);font-size:17px;max-width:60ch;margin-bottom:40px}
+section{margin-bottom:64px}
+h2{font-size:1.5rem;font-weight:700;color:#fff;letter-spacing:-.01em;margin-bottom:12px;padding-top:8px}
+h3{font-size:1.05rem;font-weight:600;color:#fff;margin:24px 0 8px}
+p{color:var(--on-s-muted);max-width:68ch;margin-bottom:12px}
+a{color:var(--p-bright)}
+.label{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--p);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+pre{background:var(--s2);border:1px solid var(--outline-hi);border-radius:var(--radius-card);padding:18px;font-family:var(--font-mono);font-size:13px;line-height:1.65;overflow-x:auto;color:var(--on-s);margin:12px 0 20px}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--s3);border:1px solid var(--outline);border-radius:3px;padding:1px 5px}
+pre code{background:none;border:none;padding:0}
+table{width:100%;border-collapse:collapse;margin:12px 0 20px;font-size:14px}
+th{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--on-s-dim);text-align:left;padding:10px 12px;border-bottom:1px solid var(--outline);font-weight:500}
+td{padding:10px 12px;border-bottom:1px solid var(--outline);color:var(--on-s-muted);vertical-align:top}
+td:first-child{font-family:var(--font-mono);color:var(--on-s);white-space:nowrap}
+tr:hover td{background:var(--p-subtle)}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:48px}
+.toc a{font-family:var(--font-mono);font-size:12px;color:var(--on-s-muted);text-decoration:none;border:1px solid var(--outline);border-radius:999px;padding:6px 14px}
+.toc a:hover{color:var(--p-bright);border-color:var(--outline-hi)}
+.note{background:var(--p-subtle);border:1px solid var(--outline);border-left:2px solid var(--p);border-radius:var(--radius);padding:14px 16px;font-size:14px;color:var(--on-s-muted);margin:12px 0 20px;max-width:none}
+.footer{border-top:1px solid var(--outline);padding:40px 0;color:var(--on-s-dim);font-size:13px}
+.footer .container{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer a{color:var(--on-s-dim)}
+@media (max-width:768px){.nav{display:none}main{padding:32px 0 64px}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container">
+    <a href="/" class="logo">fp<span>.com</span></a>
+    <nav>
+      <ul class="nav">
+        <li><a href="/">Home</a></li>
+        <li><a href="#endpoints">Endpoints</a></li>
+        <li><a href="#mcp">MCP</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="/.well-known/agent-card.json">Agent Card</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <div class="label">Documentation</div>
+    <h1>fetch-price API</h1>
+    <p class="standfirst">Live UK marketplace product search for AI agents and humans. One POST request returns real items with real prices, normalised JSON, and affiliate-tracked buy links. eBay UK is live via the official Browse API; Amazon UK is rolling out.</p>
+
+    <div class="toc">
+      <a href="#quickstart">Quick start</a>
+      <a href="#get-key">Get a key</a>
+      <a href="#endpoints">Endpoints</a>
+      <a href="#results">Result format</a>
+      <a href="#byok">BYOK affiliate tags</a>
+      <a href="#mcp">MCP server</a>
+      <a href="#limits">Rate limits</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+
+    <section id="quickstart">
+      <h2>Quick start</h2>
+      <p>No key needed on the free tier. One request, live data:</p>
+<pre><code>curl -X POST https://api.fetch-price.com/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"query":"portable air conditioner","max_results":3,"max_price":300,"networks":["ebay_uk"]}'</code></pre>
+      <p>Live response (captured 27 Jul 2026):</p>
+<pre><code>{
+  "results": [
+    {
+      "product": "Air Conditioning 5460BTU Remote Control Portable Air Conditioner Smart AC",
+      "price": 275.99,
+      "currency": "GBP",
+      "condition": "New",
+      "network": "ebay_uk",
+      "result_type": "item",
+      "item_id": "v1|358845422976|0",
+      "image": "https://i.ebayimg.com/images/g/.../s-l225.jpg",
+      "url": "https://www.ebay.co.uk/itm/358845422976?...&campid=..."
+    }
+  ],
+  "meta": {"query": "portable air conditioner", "networks_searched": ["ebay_uk"], "returned": 3}
+}</code></pre>
+    </section>
+
+    <section id="get-key">
+      <h2>Get an API key</h2>
+      <p>The free tier works without authentication (50 lookups/month). Register to get an <code>fp_</code> key, higher limits, and BYOK affiliate routing:</p>
+<pre><code>curl -X POST https://api.fetch-price.com/api/agents/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "MyShoppingAgent",
+    "owner": "<!--email_off-->you@example.com<!--/email_off-->",
+    "networks": {"ebay_uk": {"campaign_id": "YOUR_EPN_CAMPAIGN_ID"}},
+    "endpoint": "https://your-agent.example.com"
+  }'
+
+→ {"agent_id": "agent-...", "api_key": "fp_...", "tier": "free", "query_limit": 50}</code></pre>
+      <p>Send the key on every request as <code>X-API-Key: fp_...</code> (or <code>Authorization: Bearer fp_...</code>). For Pro/Scale/Trade limits, see <a href="#pricing">pricing</a>.</p>
+    </section>
+
+    <section id="endpoints">
+      <h2>Endpoints</h2>
+      <p>Base URL: <code>https://api.fetch-price.com</code></p>
+
+      <h3>POST /api/query — product search</h3>
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>query</td><td>string</td><td>yes</td><td>Plain-language product search, max 200 chars</td></tr>
+          <tr><td>max_results</td><td>int</td><td>no</td><td>Items per network. Default 5, max 20</td></tr>
+          <tr><td>max_price</td><td>number</td><td>no</td><td>Upper price bound in GBP, applied at source</td></tr>
+          <tr><td>networks</td><td>string[]</td><td>no</td><td><code>ebay_uk</code> (live), <code>amazon_uk</code> (rolling out). Default: both</td></tr>
+        </tbody>
+      </table>
+
+      <h3>GET /health — service status</h3>
+<pre><code>→ {"status": "ok", "version": "1.1.0", "networks": ["ebay_uk","amazon_uk"], "ebay_live": true}</code></pre>
+
+      <h3>POST /api/agents/register — create an agent + key</h3>
+      <p>Fields: <code>name</code>, <code>owner</code>, <code>networks</code>, <code>endpoint</code> (all required), optional <code>commission_split</code>. See <a href="#get-key">Get a key</a>.</p>
+
+      <h3>GET /api/stats — public stats</h3>
+<pre><code>→ {"agents_active": 1, "networks_available": ["ebay_uk","amazon_uk"], "version": "1.1.0"}</code></pre>
+    </section>
+
+    <section id="results">
+      <h2>Result format</h2>
+      <p>Every result declares what it is via <code>result_type</code> — the API never dresses a search page up as a product:</p>
+      <table>
+        <thead><tr><th>result_type</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>item</td><td>A real listing: live price, condition, image, item-level buy link with affiliate tracking applied by the marketplace</td></tr>
+          <tr><td>search_link</td><td>Fallback: a tracked marketplace search URL with <code>price: 0</code>. Served for networks not yet live (Amazon UK) or if the upstream API is briefly unavailable</td></tr>
+        </tbody>
+      </table>
+      <p>Item results include <code>product</code>, <code>price</code>, <code>currency</code>, <code>condition</code>, <code>network</code>, <code>url</code>, <code>image</code>, and <code>item_id</code>.</p>
+    </section>
+
+    <section id="byok">
+      <h2>BYOK — bring your own affiliate tag</h2>
+      <p>On a paid plan (Pro or Scale), register with your own eBay Partner Network <code>campaign_id</code> and every item link returned to your key carries <em>your</em> tracking — eBay pays your commission directly to you. No commission sharing, no waiting on us to pay out, no ToS grey areas: your traffic, your approved account, your money.</p>
+      <p>Free-tier and untagged requests use fetch-price's own tracking. That's the whole model — <strong>either we earn the commission, or you pay for the calls</strong> — and the convenience (one API, normalised JSON, no marketplace credentials to manage) is the same either way.</p>
+      <div class="note">You need your own EPN account for BYOK (approval takes a few days at <a href="https://partnernetwork.ebay.com" rel="noopener">partnernetwork.ebay.com</a>). Skip it and links simply run on our tag.</div>
+    </section>
+
+    <section id="mcp">
+      <h2>MCP server</h2>
+      <p>A one-file stdio MCP server for Claude Code, Claude Desktop, Cursor, and any MCP-capable client lives in the public repo:</p>
+<pre><code>git clone https://github.com/fusionx212/fetch-price
+pip install "mcp[cli]" httpx
+
+# Claude Code
+claude mcp add fetch-price -- python fetch-price/mcp/fetch_price_mcp.py</code></pre>
+      <p>Tools exposed: <code>search_products</code> (query, max_price, max_results, networks) and <code>service_status</code>. PyPI/npm packages are being published — until then, install from the repo.</p>
+    </section>
+
+    <section id="limits">
+      <h2>Rate limits</h2>
+      <p>30 requests/minute per key (or per IP when keyless). Every response carries <code>X-RateLimit-Limit</code> and <code>X-RateLimit-Remaining</code> headers; excess requests get HTTP 429. Monthly lookup quotas are per plan.</p>
+    </section>
+
+    <section id="pricing">
+      <h2>Pricing</h2>
+      <table>
+        <thead><tr><th>Plan</th><th>Lookups/month</th><th>Access</th><th>Price</th></tr></thead>
+        <tbody>
+          <tr><td>Free</td><td>50</td><td>REST, all networks</td><td>£0 — <a href="#get-key">register</a></td></tr>
+          <tr><td>Pro</td><td>5,000</td><td>REST, priority, BYOK</td><td>£29/mo — <a href="https://buy.stripe.com/7sY6oH5Yhasp86u5t5cbC1g" rel="noopener">subscribe</a></td></tr>
+          <tr><td>Scale</td><td>Unlimited</td><td>REST + WebSocket, BYOK</td><td>£99/mo — <a href="https://buy.stripe.com/8x23cvaex585dqOdZBcbC1h" rel="noopener">subscribe</a></td></tr>
+          <tr><td>Trade</td><td>Unlimited</td><td>REST + CSV + distressed inventory</td><td>£99/mo — <!--email_off--><a href="mailto:contact@fetch-price.com?subject=fetch-price%20Trade">contact</a><!--/email_off--></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div>fetch-price · <a href="/">Home</a> · <a href="https://github.com/fusionx212/fetch-price">GitHub</a></div>
+    <div><a href="/.well-known/agent-card.json">Agent Card</a> · <a href="/llms.txt">llms.txt</a> · <a href="/sitemap.xml">Sitemap</a></div>
+  </div>
+</footer>
+</body>
+</html>
