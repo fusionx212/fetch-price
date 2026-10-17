@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Privacy &amp; affiliate disclosure — fetch-price</title>
+<meta name="description" content="What fetch-price stores, how affiliate links work, and how to get your data removed.">
+<link rel="canonical" href="https://fetch-price.com/privacy">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--base:#06080b;--s1:#0a0d12;--s2:#0e1118;--on-s:#d1d5db;--on-s-muted:#94a3b8;--on-s-dim:#64748b;--p:#10b981;--p-bright:#34d399;--p-subtle:rgba(16,185,129,.08);--outline:#1e293b;--outline-hi:#334155;--radius:4px;--font-display:'Space Grotesk',system-ui,sans-serif;--font-mono:'JetBrains Mono',monospace;--col-max:800px}
+html{background:var(--base);color:var(--on-s);font-family:var(--font-display);font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.container{max-width:var(--col-max);margin:0 auto;padding:0 24px}
+.header{position:sticky;top:0;z-index:50;background:rgba(6,8,11,.85);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--outline)}
+.header>.container{display:flex;align-items:center;justify-content:space-between;height:56px}
+.logo{font-family:var(--font-mono);font-size:16px;font-weight:500;color:var(--p-bright);text-decoration:none}
+.logo span{color:var(--on-s)}
+.nav{display:flex;gap:24px;list-style:none}
+.nav a{color:var(--on-s-muted);text-decoration:none;font-size:14px;font-weight:500}
+.nav a:hover{color:var(--on-s)}
+main{padding:56px 0 96px}
+h1{font-size:clamp(1.9rem,4vw,2.5rem);font-weight:700;letter-spacing:-.02em;margin-bottom:10px;text-wrap:balance}
+h2{font-size:1.3rem;font-weight:700;color:#fff;margin:40px 0 10px;letter-spacing:-.01em}
+p{color:var(--on-s-muted);max-width:68ch;margin:10px 0}
+a{color:var(--p-bright)}
+ul{color:var(--on-s-muted);margin:10px 0 10px 22px}
+li{margin:6px 0}
+.label{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--p);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.updated{font-family:var(--font-mono);font-size:12px;color:var(--on-s-dim);margin-top:8px}
+.note{background:var(--p-subtle);border:1px solid var(--outline);border-left:2px solid var(--p);border-radius:var(--radius);padding:14px 16px;margin:18px 0;color:var(--on-s-muted);font-size:14.5px}
+code{font-family:var(--font-mono);font-size:.9em;background:var(--s2);border:1px solid var(--outline);border-radius:3px;padding:1px 5px}
+.footer{border-top:1px solid var(--outline);padding:40px 0;color:var(--on-s-dim);font-size:13px}
+.footer .container{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer a{color:var(--on-s-dim)}
+@media (max-width:768px){.nav{display:none}main{padding:32px 0 64px}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="container">
+    <a href="/" class="logo">fp<span>.com</span></a>
+    <nav><ul class="nav">
+      <li><a href="/">Home</a></li>
+      <li><a href="/docs/">Docs</a></li>
+      <li><a href="/docs/#pricing">Pricing</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<main><div class="container">
+  <div class="label">Privacy &amp; disclosure</div>
+  <h1>What we store, and how we get paid</h1>
+  <p>Short version: we log search queries to run and improve the service, we never sell them, and the purchase links we return earn us affiliate commission. Detail below.</p>
+  <p class="updated">Last updated 27 July 2026 · fetch-price is operated by POLICYANDPLAY LTD (England &amp; Wales)</p>
+
+  <h2>Affiliate disclosure</h2>
+  <p><strong>Purchase links returned by this API are affiliate-tracked.</strong> When someone buys through a link we return, the marketplace pays us a commission at no extra cost to the buyer. This is how the free tier is funded.</p>
+  <ul>
+    <li>eBay UK links carry our eBay Partner Network tracking, applied by eBay itself.</li>
+    <li>Amazon UK links carry our Amazon Associates tag.</li>
+    <li>Paid-plan customers may supply <strong>their own</strong> affiliate credentials (BYOK), in which case commission goes to them and never passes through us.</li>
+  </ul>
+  <p>Commission never influences ranking: results come back in the marketplace's own order for your query, and we do not reorder, boost, or suppress listings. If you are an agent developer surfacing these results to a person, you should pass this disclosure on to them.</p>
+
+  <h2>What we collect</h2>
+  <ul>
+    <li><strong>Search queries</strong> — the text sent to <code>/api/query</code>, with a timestamp and which marketplaces were searched. Used for service health, abuse detection, and to understand demand. Retained no longer than 30 days in raw form.</li>
+    <li><strong>API keys and account details</strong> — if you register, the name, contact email, endpoint and any affiliate identifiers you give us, plus your plan and monthly usage count.</li>
+    <li><strong>Technical request data</strong> — IP address and rate-limit counters, used to enforce fair use and block abuse.</li>
+  </ul>
+  <p>We do not require, request, or want personal data inside queries. Please do not put names, addresses, payment details or anything else identifying into a product search — it is a shopping query field, not a form.</p>
+
+  <h2>What we do not do</h2>
+  <ul>
+    <li>We do not sell or rent query data, keys, or contact details to anyone.</li>
+    <li>We do not use your queries to train models.</li>
+    <li>We do not set advertising or tracking cookies on this site.</li>
+    <li>We do not attempt to identify the end users behind an agent's requests.</li>
+  </ul>
+
+  <h2>Who else sees your data</h2>
+  <ul>
+    <li><strong>eBay</strong> — receives the search terms needed to run your query, under their own privacy policy.</li>
+    <li><strong>Stripe</strong> — handles all payments. We never see or store card details.</li>
+    <li><strong>Cloudflare</strong> — routes traffic to the API and provides abuse protection.</li>
+    <li><strong>Resend</strong> — delivers account emails such as your API key.</li>
+  </ul>
+  <p>No other third parties. The service runs on infrastructure we operate directly.</p>
+
+  <h2>Your rights</h2>
+  <p>Under UK GDPR you can ask us for a copy of what we hold about you, correct it, or have it deleted. Email <!--email_off--><a href="mailto:contact@fetch-price.com">contact@fetch-price.com</a><!--/email_off--> and we will action it within 30 days. Deleting an account removes its key, contact details and usage records; anonymous aggregate counts may remain.</p>
+
+  <div class="note"><strong>Security note:</strong> your API key is a credential. We only ever send it to the address that registered or paid, never display it in a public response, and never include it in logs or alerts. If you think a key is compromised, email us and we will revoke it.</div>
+
+  <h2>Changes</h2>
+  <p>If this policy changes materially we will update the date above and note it in the <a href="/docs/">docs</a>. Continued use after a change means you accept it.</p>
+
+  <h2>Contact</h2>
+  <p>POLICYANDPLAY LTD · <!--email_off--><a href="mailto:contact@fetch-price.com">contact@fetch-price.com</a><!--/email_off--> · registered in England &amp; Wales, company number 17253846.</p>
+</div></main>
+
+<footer class="footer">
+  <div class="container">
+    <div>fetch-price · <a href="/">Home</a> · <a href="/docs/">Docs</a> · <a href="https://github.com/fusionx212/fetch-price">GitHub</a></div>
+    <div><a href="/.well-known/agent-card.json">Agent Card</a> · <a href="/llms.txt">llms.txt</a></div>
+  </div>
+</footer>
+</body>
+</html>
